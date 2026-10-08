@@ -3,13 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mutapixel/main.dart';
 
 void main() {
-  testWidgets('home screen shows hero, search and template library',
+  testWidgets('home screen shows hero, cards, search and template library',
       (tester) async {
     await tester.pumpWidget(const SpriteBuilderApp());
     await tester.pumpAndSettle();
 
     expect(find.text('Mutapixel'), findsOneWidget);
-    expect(find.text('Create new'), findsOneWidget);
+    expect(find.text('Pixel Art'), findsOneWidget);
+    expect(find.text('Animation'), findsOneWidget);
     expect(find.text('Guided builder'), findsOneWidget);
     expect(find.text('Search templates...'), findsOneWidget);
     expect(find.text('Start from a template'), findsOneWidget);
@@ -18,11 +19,12 @@ void main() {
     expect(find.text('Heroes'), findsOneWidget);
   });
 
-  testWidgets('create new opens the canvas size picker', (tester) async {
+  testWidgets('Pixel Art card opens the canvas size picker',
+      (tester) async {
     await tester.pumpWidget(const SpriteBuilderApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Create new'));
+    await tester.tap(find.text('Pixel Art'));
     await tester.pumpAndSettle();
 
     expect(find.text('Canvas size'), findsOneWidget);
@@ -34,14 +36,26 @@ void main() {
     await tester.pumpWidget(const SpriteBuilderApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Create new'));
+    await tester.tap(find.text('Pixel Art'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('32 x 32 pixels'));
     await tester.pumpAndSettle();
 
     // Editor screen: back button + tools visible.
-    expect(find.byTooltip('Home'), findsOneWidget);
+    expect(find.byTooltip('Back'), findsOneWidget);
     expect(find.byTooltip('Pencil'), findsOneWidget);
+  });
+
+  testWidgets('Animation card opens the animation studio',
+      (tester) async {
+    await tester.pumpWidget(const SpriteBuilderApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Animation'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Animation Studio'), findsOneWidget);
+    expect(find.text('Timeline'), findsOneWidget);
   });
 
   testWidgets('search filters templates and opens the editor',
@@ -60,7 +74,7 @@ void main() {
     await tester.tap(find.text('Slime Hero'));
     await tester.pumpAndSettle();
 
-    expect(find.byTooltip('Home'), findsOneWidget);
-    expect(find.byTooltip('Templates'), findsOneWidget);
+    expect(find.byTooltip('Back'), findsOneWidget);
+    expect(find.text('Templates'), findsOneWidget);
   });
 }
