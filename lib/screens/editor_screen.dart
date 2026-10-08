@@ -9,6 +9,7 @@ import '../data/sprite_parts.dart';
 import '../models/sprite_frame.dart';
 import '../models/sprite_palette.dart';
 import '../theme/mutapixel_theme.dart';
+import '../theme/theme_controller.dart';
 import '../widgets/pixel_canvas.dart';
 import 'export_sheet.dart';
 import 'template_gallery.dart';
@@ -37,6 +38,7 @@ class _EditorScreenState extends State<EditorScreen> {
   CanvasTool _tool = CanvasTool.pencil;
   bool _mirror = false;
   bool _showGrid = true;
+  bool _railCollapsed = false;
 
   /// Part selected for stamping (null when not in stamp mode).
   SpriteFrame? _stampPart;
@@ -265,8 +267,8 @@ class _EditorScreenState extends State<EditorScreen> {
         alignment: Alignment.centerLeft,
         child: Text(
           text,
-          style: const TextStyle(
-            color: MutapixelTheme.secondaryText,
+          style: TextStyle(
+            color: MutapixelTheme.of(context).secondaryText,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -295,7 +297,7 @@ class _EditorScreenState extends State<EditorScreen> {
                   color: Color.fromARGB(255, r, g, b),
                   borderRadius: BorderRadius.circular(12),
                   border:
-                      Border.all(color: MutapixelTheme.hairline),
+                      Border.all(color: MutapixelTheme.of(context).hairline),
                 ),
               ),
               const SizedBox(height: 12),
@@ -444,6 +446,16 @@ class _EditorScreenState extends State<EditorScreen> {
                 _showGrid ? Icons.grid_on : Icons.grid_off),
             onPressed: () => setState(() => _showGrid = !_showGrid),
           ),
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: ThemeController.mode,
+            builder: (context, mode, _) => IconButton(
+              tooltip: 'Toggle theme',
+              icon: Icon(mode == ThemeMode.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode),
+              onPressed: ThemeController.toggle,
+            ),
+          ),
           if (_frames.length > 1)
             IconButton(
               tooltip: 'Preview animation',
@@ -457,8 +469,13 @@ class _EditorScreenState extends State<EditorScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _sideRail(),
+          Expanded(
+            child: Column(
+              children: [
           // Stamp mode banner.
           if (_tool == CanvasTool.stamp)
             Container(
@@ -498,7 +515,7 @@ class _EditorScreenState extends State<EditorScreen> {
             child: Container(
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(12),
-              decoration: MutapixelTheme.cardDecoration(),
+              decoration: MutapixelTheme.cardDecoration(context),
               child: PixelCanvas(
                 frame: _frame,
                 drawColor: _drawColor,
@@ -551,11 +568,11 @@ class _EditorScreenState extends State<EditorScreen> {
                     width: 60,
                     margin: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: MutapixelTheme.surface,
+                      color: MutapixelTheme.of(context).surface,
                       border: Border.all(
                         color: selected
                             ? MutapixelTheme.primary
-                            : MutapixelTheme.hairline,
+                            : MutapixelTheme.of(context).hairline,
                         width: selected ? 2 : 1,
                       ),
                       borderRadius: BorderRadius.circular(12),
@@ -574,19 +591,12 @@ class _EditorScreenState extends State<EditorScreen> {
               },
             ),
           ),
-          // Toolbar: segmented control rail.
-          Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 4),
-            child: Center(child: _toolRail()),
-          ),
           // Palette bar.
           Container(
             margin: const EdgeInsets.fromLTRB(12, 4, 12, 0),
             padding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: MutapixelTheme.cardDecoration(
-                radius: MutapixelTheme.smallCardRadius),
+            decoration: MutapixelTheme.cardDecoration(context, radius: MutapixelTheme.smallCardRadius),
             child: Column(
               children: [
                 Row(
@@ -597,15 +607,15 @@ class _EditorScreenState extends State<EditorScreen> {
                         children: [
                           Text(
                             _palette.name,
-                            style: const TextStyle(
-                              color: MutapixelTheme.secondaryText,
+                            style: TextStyle(
+                              color: MutapixelTheme.of(context).secondaryText,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const Icon(Icons.arrow_drop_down,
+                          Icon(Icons.arrow_drop_down,
                               color:
-                                  MutapixelTheme.secondaryText),
+                                  MutapixelTheme.of(context).secondaryText),
                         ],
                       ),
                       onSelected: (p) => setState(() {
@@ -651,7 +661,7 @@ class _EditorScreenState extends State<EditorScreen> {
                             border: Border.all(
                               color: selected
                                   ? MutapixelTheme.primary
-                                  : MutapixelTheme.hairline,
+                                  : MutapixelTheme.of(context).hairline,
                               width: selected ? 3 : 1,
                             ),
                             boxShadow: selected
@@ -667,6 +677,9 @@ class _EditorScreenState extends State<EditorScreen> {
             ),
           ),
           const SafeArea(child: SizedBox(height: 8)),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -677,7 +690,7 @@ class _EditorScreenState extends State<EditorScreen> {
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: MutapixelTheme.subtleFill,
+        color: MutapixelTheme.of(context).subtleFill,
         borderRadius: BorderRadius.circular(999),
         child: InkWell(
           borderRadius: BorderRadius.circular(999),
@@ -685,122 +698,169 @@ class _EditorScreenState extends State<EditorScreen> {
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Icon(icon,
-                size: 20, color: MutapixelTheme.ink),
+                size: 20, color: MutapixelTheme.of(context).ink),
           ),
         ),
       ),
     );
   }
 
-  /// Segmented tool rail: selected tool is a filled indigo pill.
-  Widget _toolRail() {
-    return Container(
+  /// Collapsible vertical tool rail (Photoshop/Figma style).
+  ///
+  /// Expanded: tool buttons stacked vertically with a collapse toggle on
+  /// top. Collapsed: a slim strip showing only the expand toggle.
+  Widget _sideRail() {
+    final palette = MutapixelTheme.of(context);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+      width: _railCollapsed ? 52 : 76,
+      margin: const EdgeInsets.fromLTRB(12, 12, 0, 12),
       decoration: BoxDecoration(
-        color: MutapixelTheme.subtleFill,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: MutapixelTheme.hairline),
-      ),
-      padding: const EdgeInsets.all(4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _railToolButton(
-              CanvasTool.pencil, Icons.brush, 'Pencil'),
-          _railToolButton(
-              CanvasTool.eraser, Icons.auto_fix_high, 'Eraser'),
-          _railToolButton(
-              CanvasTool.fill, Icons.format_color_fill, 'Fill'),
-          _railToggleButton(
-            Icons.flip,
-            'Mirror (symmetry)',
-            _mirror,
-            () => setState(() => _mirror = !_mirror),
-          ),
-          _railToggleButton(
-            Icons.undo,
-            'Undo',
-            false,
-            _undoStack.isEmpty ? null : _undo,
-          ),
-          _railToggleButton(
-            Icons.delete_outline,
-            'Clear frame',
-            false,
-            () {
-              _pushUndo();
-              setState(() {
-                _frames[_activeFrame] = SpriteFrame(
-                    width: _canvasSize, height: _canvasSize);
-              });
-            },
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: palette.hairline),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 16,
+            offset: Offset(0, 4),
           ),
         ],
       ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          children: [
+            _sideRailButton(
+              icon: _railCollapsed
+                  ? Icons.chevron_right
+                  : Icons.chevron_left,
+              tip: _railCollapsed
+                  ? 'Expand tools'
+                  : 'Collapse tools',
+              onTap: () =>
+                  setState(() => _railCollapsed = !_railCollapsed),
+            ),
+            Container(
+              height: 1,
+              margin: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 4),
+              color: palette.hairline,
+            ),
+            if (!_railCollapsed)
+              Expanded(
+                child: SingleChildScrollView(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 4),
+                  child: Column(
+                    children: [
+                      _sideRailToolButton(CanvasTool.pencil,
+                          Icons.brush, 'Pencil'),
+                      _sideRailToolButton(CanvasTool.eraser,
+                          Icons.auto_fix_high, 'Eraser'),
+                      _sideRailToolButton(CanvasTool.fill,
+                          Icons.format_color_fill, 'Fill'),
+                      Container(
+                        height: 1,
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        color: palette.hairline,
+                      ),
+                      _sideRailButton(
+                        icon: Icons.flip,
+                        tip: 'Mirror (symmetry)',
+                        selected: _mirror,
+                        onTap: () => setState(
+                            () => _mirror = !_mirror),
+                      ),
+                      _sideRailButton(
+                        icon: Icons.undo,
+                        tip: 'Undo',
+                        onTap:
+                            _undoStack.isEmpty ? null : _undo,
+                      ),
+                      _sideRailButton(
+                        icon: Icons.delete_outline,
+                        tip: 'Clear frame',
+                        onTap: () {
+                          _pushUndo();
+                          setState(() {
+                            _frames[_activeFrame] = SpriteFrame(
+                                width: _canvasSize,
+                                height: _canvasSize);
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _railToolButton(
+  Widget _sideRailToolButton(
       CanvasTool tool, IconData icon, String tip) {
-    final selected = _tool == tool;
-    return _railPill(
+    return _sideRailButton(
+      icon: icon,
       tip: tip,
-      selected: selected,
+      selected: _tool == tool,
       onTap: () => setState(() => _tool = tool),
-      icon: icon,
     );
   }
 
-  Widget _railToggleButton(IconData icon, String tip, bool active,
-      VoidCallback? onTap) {
-    return _railPill(
-      tip: tip,
-      selected: active,
-      onTap: onTap,
-      icon: icon,
-    );
-  }
-
-  Widget _railPill({
-    required String tip,
-    required bool selected,
+  Widget _sideRailButton({
     required IconData icon,
+    required String tip,
+    bool selected = false,
     VoidCallback? onTap,
   }) {
     final enabled = onTap != null;
-    return Tooltip(
-      message: tip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(
-                horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: selected
-                  ? MutapixelTheme.primary
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow:
-                  selected ? MutapixelTheme.pillShadow : null,
-            ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: selected
-                  ? Colors.white
-                  : enabled
-                      ? MutapixelTheme.ink
-                      : MutapixelTheme.secondaryText
-                          .withValues(alpha: 0.5),
+    final palette = MutapixelTheme.of(context);
+    final buttonWidth = _railCollapsed ? 40.0 : 52.0;
+    return Padding(
+      padding: EdgeInsets.symmetric(
+          horizontal: _railCollapsed ? 6 : 12, vertical: 5),
+      child: Tooltip(
+        message: tip,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: buttonWidth,
+              height: 44,
+              decoration: BoxDecoration(
+                color: selected
+                    ? MutapixelTheme.primary
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: selected
+                    ? MutapixelTheme.pillShadow
+                    : null,
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: selected
+                    ? Colors.white
+                    : enabled
+                        ? palette.ink
+                        : palette.secondaryText
+                            .withValues(alpha: 0.5),
+              ),
             ),
           ),
         ),
       ),
     );
   }
+
 
   bool _sameColor(Color a, Color b) =>
       a.toARGB32() == b.toARGB32();
