@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/sprite_frame.dart';
 
 /// Drawing tools available on the canvas.
-enum CanvasTool { pencil, eraser, fill }
+enum CanvasTool { pencil, eraser, fill, stamp }
 
 /// Touch-driven pixel canvas.
 ///
@@ -20,6 +20,10 @@ class PixelCanvas extends StatefulWidget {
   final VoidCallback onStrokeStart;
   final VoidCallback onChanged;
 
+  /// When [tool] is [CanvasTool.stamp], this part is stamped onto the
+  /// canvas centered at the tap position. Null disables stamping.
+  final SpriteFrame? stampFrame;
+
   const PixelCanvas({
     super.key,
     required this.frame,
@@ -29,6 +33,7 @@ class PixelCanvas extends StatefulWidget {
     required this.showGrid,
     required this.onStrokeStart,
     required this.onChanged,
+    this.stampFrame,
   });
 
   @override
@@ -60,6 +65,9 @@ class _PixelCanvasState extends State<PixelCanvas> {
         }
       case CanvasTool.fill:
         // Fill happens on tap only; drags are ignored for fill.
+        return;
+      case CanvasTool.stamp:
+        // Stamping happens on tap only via _stampAt; drags are ignored.
         return;
     }
     widget.onChanged();
@@ -98,6 +106,28 @@ class _PixelCanvasState extends State<PixelCanvas> {
     widget.onChanged();
   }
 
+  void _stampAt(Offset local, Size paintSize) {
+    final part = widget.stampFrame;
+    if (part == null) return;
+    final frame = widget.frame;
+    final pixelSize = _pixelSize(paintSize, frame);
+    final origin = _origin(paintSize, frame, pixelSize);
+
+    final px = ((local.dx - origin.dx) / pixelSize).floor();
+    final py = ((local.dy - origin.dy) / pixelSize).floor();
+    // Center the part on the tapped pixel.
+    final ox = px - part.width ~/ 2;
+    final oy = py - part.height ~/ 2;
+    for (var y = 0; y < part.height; y++) {
+      for (var x = 0; x < part.width; x++) {
+        final color = part.getPixel(x, y);
+        if (color == null) continue;
+        frame.setPixel(ox + x, oy + y, color);
+      }
+    }
+    widget.onChanged();
+  }
+
   bool _sameColor(Color? a, Color? b) {
     if (a == null || b == null) return a == null && b == null;
     return a.toARGB32() == b.toARGB32();
@@ -132,12 +162,18 @@ class _PixelCanvasState extends State<PixelCanvas> {
             _stroking = true;
             if (widget.tool == CanvasTool.fill) {
               _fillAt(local, paintSize);
+            } else if (widget.tool == CanvasTool.stamp) {
+              _stampAt(local, paintSize);
             } else {
               _paintAt(local, paintSize);
             }
           },
           onPanUpdate: (details) {
-            if (!_stroking || widget.tool == CanvasTool.fill) return;
+            if (!_stroking ||
+                widget.tool == CanvasTool.fill ||
+                widget.tool == CanvasTool.stamp) {
+              return;
+            }
             final box = context.findRenderObject() as RenderBox;
             _paintAt(box.globalToLocal(details.globalPosition), paintSize);
           },
