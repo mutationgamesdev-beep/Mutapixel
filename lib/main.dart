@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'screens/editor_screen.dart';
+import 'screens/home_screen.dart';
 import 'theme/mutapixel_theme.dart';
 import 'theme/theme_controller.dart';
 
@@ -24,7 +24,7 @@ class SpriteBuilderApp extends StatelessWidget {
           theme: MutapixelTheme.light(),
           darkTheme: MutapixelTheme.dark(),
           themeMode: mode,
-          home: const EditorScreen(),
+          home: const HomeScreen(),
         );
       },
     );
