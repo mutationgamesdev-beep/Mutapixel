@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../models/sprite_frame.dart';
+import '../theme/mutapixel_theme.dart';
 
 /// Drawing tools available on the canvas.
 enum CanvasTool { pencil, eraser, fill, stamp }
@@ -207,9 +208,9 @@ class _CanvasPainter extends CustomPainter {
     final ox = (size.width - frame.width * clamped) / 2;
     final oy = (size.height - frame.height * clamped) / 2;
 
-    // Transparency checkerboard.
-    final light = Paint()..color = const Color(0xFF2A2A35);
-    final dark = Paint()..color = const Color(0xFF1E1E28);
+    // Transparency checkerboard (light, premium).
+    final light = Paint()..color = const Color(0xFFFFFFFF);
+    final dark = Paint()..color = const Color(0xFFF1F1F4);
     for (var y = 0; y < frame.height; y++) {
       for (var x = 0; x < frame.width; x++) {
         canvas.drawRect(
@@ -234,7 +235,7 @@ class _CanvasPainter extends CustomPainter {
     // Grid.
     if (showGrid) {
       final gridPaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.08)
+        ..color = MutapixelTheme.ink.withValues(alpha: 0.07)
         ..strokeWidth = 1;
       for (var x = 0; x <= frame.width; x++) {
         final dx = ox + x * clamped;
@@ -248,7 +249,7 @@ class _CanvasPainter extends CustomPainter {
       }
       // Mirror guide down the middle.
       final midPaint = Paint()
-        ..color = Colors.cyanAccent.withValues(alpha: 0.35)
+        ..color = MutapixelTheme.primary.withValues(alpha: 0.45)
         ..strokeWidth = 1.5;
       final midX = ox + frame.width * clamped / 2;
       canvas.drawLine(
@@ -261,8 +262,8 @@ class _CanvasPainter extends CustomPainter {
           ox, oy, frame.width * clamped, frame.height * clamped),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = Colors.white24,
+        ..strokeWidth = 1.5
+        ..color = MutapixelTheme.hairline,
     );
   }
 
