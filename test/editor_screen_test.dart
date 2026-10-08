@@ -8,7 +8,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // App bar and title.
-    expect(find.text('Sprite Builder'), findsOneWidget);
+    expect(find.text('Mutapixel'), findsOneWidget);
 
     // Tools.
     expect(find.byTooltip('Pencil'), findsOneWidget);
