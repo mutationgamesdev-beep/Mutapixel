@@ -45,6 +45,8 @@ dependencies:
   gal: ^2.3.1
   # Browser APIs for the web build (file downloads)
   web: ^1.1.0
+  # Persist the user's light/dark theme choice
+  shared_preferences: ^2.3.0
 
 dev_dependencies:
   flutter_test:
