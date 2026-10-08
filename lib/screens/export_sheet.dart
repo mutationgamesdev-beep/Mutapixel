@@ -90,10 +90,10 @@ class _ExportSheetState extends State<ExportSheet> {
                 style: TextStyle(
                     fontSize: 17, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Lossless PNG, real transparency, crisp pixels.',
               style: TextStyle(
-                  color: MutapixelTheme.secondaryText,
+                  color: MutapixelTheme.of(context).secondaryText,
                   fontSize: 13),
             ),
             const SizedBox(height: 12),
@@ -108,9 +108,9 @@ class _ExportSheetState extends State<ExportSheet> {
                   : null,
               contentPadding: EdgeInsets.zero,
             ),
-            const Text('Scale',
+            Text('Scale',
                 style: TextStyle(
-                    color: MutapixelTheme.secondaryText,
+                    color: MutapixelTheme.of(context).secondaryText,
                     fontSize: 13,
                     fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
@@ -127,9 +127,9 @@ class _ExportSheetState extends State<ExportSheet> {
             ),
             if (_asSheet && widget.frames.length > 1) ...[
               const SizedBox(height: 12),
-              const Text('Frames per row',
+              Text('Frames per row',
                   style: TextStyle(
-                      color: MutapixelTheme.secondaryText,
+                      color: MutapixelTheme.of(context).secondaryText,
                       fontSize: 13,
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
@@ -171,8 +171,8 @@ class _ExportSheetState extends State<ExportSheet> {
               const SizedBox(height: 12),
               Center(
                 child: Text(_status!,
-                    style: const TextStyle(
-                        color: MutapixelTheme.secondaryText,
+                    style: TextStyle(
+                        color: MutapixelTheme.of(context).secondaryText,
                         fontSize: 13)),
               ),
             ],
@@ -202,10 +202,10 @@ class _ExportSheetState extends State<ExportSheet> {
         ),
         const SizedBox(height: 6),
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: MutapixelTheme.ink)),
+                color: MutapixelTheme.of(context).ink)),
       ],
     );
   }
@@ -237,11 +237,11 @@ class _SelectChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? MutapixelTheme.primary
-                : MutapixelTheme.subtleFill,
+                : MutapixelTheme.of(context).subtleFill,
             borderRadius: BorderRadius.circular(999),
             border: selected
                 ? null
-                : Border.all(color: MutapixelTheme.hairline),
+                : Border.all(color: MutapixelTheme.of(context).hairline),
             boxShadow:
                 selected ? MutapixelTheme.pillShadow : null,
           ),
@@ -252,7 +252,7 @@ class _SelectChip extends StatelessWidget {
               fontWeight:
                   selected ? FontWeight.w600 : FontWeight.w500,
               color:
-                  selected ? Colors.white : MutapixelTheme.ink,
+                  selected ? Colors.white : MutapixelTheme.of(context).ink,
             ),
           ),
         ),
