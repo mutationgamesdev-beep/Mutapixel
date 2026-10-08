@@ -58,8 +58,7 @@ class _EffectsSheetState extends State<EffectsSheet> {
               width: 120,
               height: 120,
               margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: MutapixelTheme.cardDecoration(
-                  radius: MutapixelTheme.smallCardRadius),
+              decoration: MutapixelTheme.cardDecoration(context, radius: MutapixelTheme.smallCardRadius),
               child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: CustomPaint(
@@ -113,14 +112,14 @@ class _EffectsSheetState extends State<EffectsSheet> {
                           fontWeight: FontWeight.w600)),
                 ),
               ),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                       'Pick a color in your sprite, then pick its replacement.',
                       style: TextStyle(
-                          color: MutapixelTheme.secondaryText,
+                          color: MutapixelTheme.of(context).secondaryText,
                           fontSize: 13)),
                 ),
               ),
@@ -203,22 +202,22 @@ class _EffectsSheetState extends State<EffectsSheet> {
           padding: const EdgeInsets.symmetric(
               horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: MutapixelTheme.subtleFill,
+            color: MutapixelTheme.of(context).subtleFill,
             borderRadius: BorderRadius.circular(999),
             border:
-                Border.all(color: MutapixelTheme.hairline),
+                Border.all(color: MutapixelTheme.of(context).hairline),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon,
-                  size: 18, color: MutapixelTheme.ink),
+                  size: 18, color: MutapixelTheme.of(context).ink),
               const SizedBox(width: 8),
               Text(label,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: MutapixelTheme.ink)),
+                      color: MutapixelTheme.of(context).ink)),
             ],
           ),
         ),
@@ -239,7 +238,7 @@ class _EffectsSheetState extends State<EffectsSheet> {
           border: Border.all(
             color: selected
                 ? MutapixelTheme.primary
-                : MutapixelTheme.hairline,
+                : MutapixelTheme.of(context).hairline,
             width: selected ? 3 : 1,
           ),
           boxShadow:
