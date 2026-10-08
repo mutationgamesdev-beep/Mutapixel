@@ -4,12 +4,18 @@ import 'package:flutter/material.dart';
 
 import '../data/palette_presets.dart';
 import '../data/starter_templates.dart';
+import '../data/template_library.dart';
+import '../data/sprite_parts.dart';
 import '../models/sprite_frame.dart';
 import '../models/sprite_palette.dart';
 import '../widgets/pixel_canvas.dart';
 import 'export_sheet.dart';
+import 'template_gallery.dart';
+import 'parts_sheet.dart';
+import 'effects_sheet.dart';
+import 'guided_builder.dart';
 
-/// The main Sprite Builder editor: canvas, tools, palettes and frames.
+/// The main Mutapixel editor: canvas, tools, palettes and frames.
 class EditorScreen extends StatefulWidget {
   const EditorScreen({super.key});
 
@@ -30,6 +36,9 @@ class _EditorScreenState extends State<EditorScreen> {
   CanvasTool _tool = CanvasTool.pencil;
   bool _mirror = false;
   bool _showGrid = true;
+
+  /// Part selected for stamping (null when not in stamp mode).
+  SpriteFrame? _stampPart;
 
   final List<SpriteFrame> _undoStack = [];
 
@@ -101,6 +110,79 @@ class _EditorScreenState extends State<EditorScreen> {
     Navigator.of(context).pop();
   }
 
+  // ---------- Canva-style: templates, parts, effects, guided builder ----------
+
+  Future<void> _openTemplateGallery() async {
+    final template = await Navigator.of(context).push<ArtTemplate>(
+      MaterialPageRoute(builder: (_) => const TemplateGallery()),
+    );
+    if (template == null) return;
+    final frame = template.toFrame();
+    setState(() {
+      _canvasSize = frame.width;
+      _frames = [frame];
+      _activeFrame = 0;
+      _undoStack.clear();
+      _exitStampMode();
+    });
+  }
+
+  Future<void> _openGuidedBuilder() async {
+    final frame = await Navigator.of(context).push<SpriteFrame>(
+      MaterialPageRoute(builder: (_) => const GuidedBuilder()),
+    );
+    if (frame == null) return;
+    setState(() {
+      _canvasSize = frame.width;
+      _frames = [frame];
+      _activeFrame = 0;
+      _undoStack.clear();
+      _exitStampMode();
+    });
+  }
+
+  Future<void> _openPartsSheet() async {
+    final part = await showModalBottomSheet<SpritePart>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const PartsSheet(),
+    );
+    if (part == null) return;
+    setState(() {
+      _stampPart = part.toFrame();
+      _tool = CanvasTool.stamp;
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tap the canvas to stamp the part.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _exitStampMode() {
+    _stampPart = null;
+    if (_tool == CanvasTool.stamp) _tool = CanvasTool.pencil;
+  }
+
+  Future<void> _openEffectsSheet() async {
+    final result = await showModalBottomSheet<SpriteFrame>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => EffectsSheet(
+        frame: _frame,
+        paletteColors: _palette.colors,
+      ),
+    );
+    if (result == null) return;
+    _pushUndo();
+    setState(() {
+      _frames[_activeFrame] = result;
+    });
+  }
+
   void _newBlank(int size) {
     setState(() {
       _canvasSize = size;
@@ -123,6 +205,33 @@ class _EditorScreenState extends State<EditorScreen> {
               child: Text('New sprite',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Start easy',
+                    style: TextStyle(color: Colors.white70)),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.auto_awesome),
+              title: const Text('Character builder'),
+              subtitle: const Text('Step-by-step: body, face, hat, colors'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _openGuidedBuilder();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.grid_view),
+              title: const Text('Template gallery'),
+              subtitle: const Text('Heroes, monsters, animals, items'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _openTemplateGallery();
+              },
+            ),
+            const Divider(),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Align(
@@ -291,6 +400,21 @@ class _EditorScreenState extends State<EditorScreen> {
         title: const Text('Mutapixel'),
         actions: [
           IconButton(
+            tooltip: 'Templates',
+            icon: const Icon(Icons.grid_view),
+            onPressed: _openTemplateGallery,
+          ),
+          IconButton(
+            tooltip: 'Parts',
+            icon: const Icon(Icons.extension),
+            onPressed: _openPartsSheet,
+          ),
+          IconButton(
+            tooltip: 'Magic effects',
+            icon: const Icon(Icons.auto_fix_high),
+            onPressed: _openEffectsSheet,
+          ),
+          IconButton(
             tooltip: 'New sprite',
             icon: const Icon(Icons.add_box_outlined),
             onPressed: _showNewSpriteMenu,
@@ -328,6 +452,34 @@ class _EditorScreenState extends State<EditorScreen> {
       ),
       body: Column(
         children: [
+          // Stamp mode banner.
+          if (_tool == CanvasTool.stamp)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 8),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primary
+                  .withValues(alpha: 0.15),
+              child: Row(
+                children: [
+                  Icon(Icons.extension,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text('Stamp mode: tap the canvas to place.',
+                        style: TextStyle(fontSize: 13)),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        setState(() => _exitStampMode()),
+                    child: const Text('Done'),
+                  ),
+                ],
+              ),
+            ),
           // Canvas.
           Expanded(
             child: Container(
@@ -342,6 +494,7 @@ class _EditorScreenState extends State<EditorScreen> {
                 tool: _tool,
                 mirror: _mirror,
                 showGrid: _showGrid,
+                stampFrame: _stampPart,
                 onStrokeStart: _pushUndo,
                 onChanged: () => setState(() {}),
               ),
