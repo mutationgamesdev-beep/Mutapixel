@@ -1,4 +1,4 @@
-# Sprite Builder
+# Mutapixel
 
 A mobile app for creating pixel-art character sprites and items. Built with
 Flutter for iOS from day one (Android-ready too).
