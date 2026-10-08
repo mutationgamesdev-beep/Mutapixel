@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'screens/editor_screen.dart';
+import 'theme/mutapixel_theme.dart';
 
 void main() {
   runApp(const SpriteBuilderApp());
@@ -14,19 +15,7 @@ class SpriteBuilderApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mutapixel',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFE0301E), // MutationGames red
-          brightness: Brightness.dark,
-        ),
-        scaffoldBackgroundColor: const Color(0xFF0E0E14),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF14141C),
-          foregroundColor: Colors.white,
-        ),
-      ),
+      theme: MutapixelTheme.light(),
       home: const EditorScreen(),
     );
   }
