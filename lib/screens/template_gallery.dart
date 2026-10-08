@@ -60,8 +60,7 @@ class _TemplateGalleryState extends State<TemplateGallery> {
           return GestureDetector(
             onTap: () => Navigator.of(context).pop(t),
             child: Container(
-              decoration: MutapixelTheme.cardDecoration(
-                  radius: MutapixelTheme.smallCardRadius),
+              decoration: MutapixelTheme.cardDecoration(context, radius: MutapixelTheme.smallCardRadius),
               child: Column(
                 children: [
                   Expanded(
@@ -79,10 +78,10 @@ class _TemplateGalleryState extends State<TemplateGallery> {
                         left: 8, right: 8, bottom: 10),
                     child: Text(
                       t.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: MutapixelTheme.ink,
+                        color: MutapixelTheme.of(context).ink,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -148,11 +147,11 @@ class _CategoryChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? MutapixelTheme.primary
-                : MutapixelTheme.subtleFill,
+                : MutapixelTheme.of(context).subtleFill,
             borderRadius: BorderRadius.circular(999),
             border: selected
                 ? null
-                : Border.all(color: MutapixelTheme.hairline),
+                : Border.all(color: MutapixelTheme.of(context).hairline),
             boxShadow:
                 selected ? MutapixelTheme.pillShadow : null,
           ),
@@ -164,7 +163,7 @@ class _CategoryChip extends StatelessWidget {
                   selected ? FontWeight.w600 : FontWeight.w500,
               color: selected
                   ? Colors.white
-                  : MutapixelTheme.ink,
+                  : MutapixelTheme.of(context).ink,
             ),
           ),
         ),
