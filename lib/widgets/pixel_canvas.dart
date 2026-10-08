@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -36,6 +37,33 @@ class PixelCanvas extends StatefulWidget {
     required this.onChanged,
     this.stampFrame,
   });
+
+  /// Converts a global pointer/drop offset to canvas pixel coordinates.
+  ///
+  /// [canvasBox] must be the [RenderBox] of this [PixelCanvas].
+  /// Returns null when the offset falls outside the frame.
+  /// Uses the same geometry as the painter (pixel size clamped to 64).
+  static math.Point<int>? dropToPixel({
+    required RenderBox canvasBox,
+    required Offset globalOffset,
+    required SpriteFrame frame,
+  }) {
+    final local = canvasBox.globalToLocal(globalOffset);
+    final paintSize = canvasBox.size;
+    var pixelSize = paintSize.width / frame.width <
+            paintSize.height / frame.height
+        ? paintSize.width / frame.width
+        : paintSize.height / frame.height;
+    if (pixelSize > 64.0) pixelSize = 64.0;
+    final ox = (paintSize.width - frame.width * pixelSize) / 2;
+    final oy = (paintSize.height - frame.height * pixelSize) / 2;
+    final px = ((local.dx - ox) / pixelSize).floor();
+    final py = ((local.dy - oy) / pixelSize).floor();
+    if (px < 0 || py < 0 || px >= frame.width || py >= frame.height) {
+      return null;
+    }
+    return math.Point(px, py);
+  }
 
   @override
   State<PixelCanvas> createState() => _PixelCanvasState();
