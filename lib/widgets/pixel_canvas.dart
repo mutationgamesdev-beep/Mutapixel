@@ -7,7 +7,7 @@ import '../models/sprite_frame.dart';
 import '../theme/mutapixel_theme.dart';
 
 /// Drawing tools available on the canvas.
-enum CanvasTool { pencil, eraser, fill, stamp }
+enum CanvasTool { pencil, eraser, fill, stamp, eyedropper }
 
 /// Touch-driven pixel canvas.
 ///
@@ -26,6 +26,10 @@ class PixelCanvas extends StatefulWidget {
   /// canvas centered at the tap position. Null disables stamping.
   final SpriteFrame? stampFrame;
 
+  /// Called when [tool] is [CanvasTool.eyedropper] and the user taps a
+  /// non-transparent pixel. The parent should adopt the color.
+  final ValueChanged<Color>? onColorPicked;
+
   const PixelCanvas({
     super.key,
     required this.frame,
@@ -36,6 +40,7 @@ class PixelCanvas extends StatefulWidget {
     required this.onStrokeStart,
     required this.onChanged,
     this.stampFrame,
+    this.onColorPicked,
   });
 
   /// Converts a global pointer/drop offset to canvas pixel coordinates.
@@ -98,8 +103,25 @@ class _PixelCanvasState extends State<PixelCanvas> {
       case CanvasTool.stamp:
         // Stamping happens on tap only via _stampAt; drags are ignored.
         return;
+      case CanvasTool.eyedropper:
+        // Picking happens on tap only via _pickAt; drags are ignored.
+        return;
     }
     widget.onChanged();
+  }
+
+  void _pickAt(Offset local, Size paintSize) {
+    final frame = widget.frame;
+    final pixelSize = _pixelSize(paintSize, frame);
+    final origin = _origin(paintSize, frame, pixelSize);
+
+    final px = ((local.dx - origin.dx) / pixelSize).floor();
+    final py = ((local.dy - origin.dy) / pixelSize).floor();
+    if (px < 0 || py < 0 || px >= frame.width || py >= frame.height) return;
+
+    final color = frame.getPixel(px, py);
+    if (color == null) return; // Tapped transparency: keep current color.
+    widget.onColorPicked?.call(color);
   }
 
   void _fillAt(Offset local, Size paintSize) {
@@ -193,6 +215,8 @@ class _PixelCanvasState extends State<PixelCanvas> {
               _fillAt(local, paintSize);
             } else if (widget.tool == CanvasTool.stamp) {
               _stampAt(local, paintSize);
+            } else if (widget.tool == CanvasTool.eyedropper) {
+              _pickAt(local, paintSize);
             } else {
               _paintAt(local, paintSize);
             }
@@ -200,7 +224,8 @@ class _PixelCanvasState extends State<PixelCanvas> {
           onPanUpdate: (details) {
             if (!_stroking ||
                 widget.tool == CanvasTool.fill ||
-                widget.tool == CanvasTool.stamp) {
+                widget.tool == CanvasTool.stamp ||
+                widget.tool == CanvasTool.eyedropper) {
               return;
             }
             final box = context.findRenderObject() as RenderBox;
