@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import '../models/sprite_frame.dart';
 import '../services/save_service.dart';
 import '../services/sprite_exporter.dart';
+import '../theme/mutapixel_theme.dart';
 
 /// Export options: PNG or sprite sheet, scale, then save / share.
 class ExportSheet extends StatefulWidget {
@@ -76,9 +77,9 @@ class _ExportSheetState extends State<ExportSheet> {
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 16,
+          left: 20,
+          right: 20,
+          top: 8,
           bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         ),
         child: Column(
@@ -87,11 +88,13 @@ class _ExportSheetState extends State<ExportSheet> {
           children: [
             const Text('Export',
                 style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold)),
+                    fontSize: 17, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             const Text(
               'Lossless PNG, real transparency, crisp pixels.',
-              style: TextStyle(color: Colors.white70, fontSize: 13),
+              style: TextStyle(
+                  color: MutapixelTheme.secondaryText,
+                  fontSize: 13),
             ),
             const SizedBox(height: 12),
             SwitchListTile(
@@ -103,36 +106,46 @@ class _ExportSheetState extends State<ExportSheet> {
               onChanged: widget.frames.length > 1
                   ? (v) => setState(() => _asSheet = v)
                   : null,
+              contentPadding: EdgeInsets.zero,
             ),
-            const Text('Scale', style: TextStyle(color: Colors.white70)),
+            const Text('Scale',
+                style: TextStyle(
+                    color: MutapixelTheme.secondaryText,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               children: [1, 2, 4, 8]
-                  .map((s) => ChoiceChip(
-                        label: Text('${s}x'),
+                  .map((s) => _SelectChip(
+                        label: '${s}x',
                         selected: _scale == s,
-                        onSelected: (_) =>
+                        onSelected: () =>
                             setState(() => _scale = s),
                       ))
                   .toList(),
             ),
             if (_asSheet && widget.frames.length > 1) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               const Text('Frames per row',
-                  style: TextStyle(color: Colors.white70)),
+                  style: TextStyle(
+                      color: MutapixelTheme.secondaryText,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 children: [2, 4, 8]
-                    .map((c) => ChoiceChip(
-                          label: Text('$c'),
+                    .map((c) => _SelectChip(
+                          label: '$c',
                           selected: _columns == c,
-                          onSelected: (_) =>
+                          onSelected: () =>
                               setState(() => _columns = c),
                         ))
                     .toList(),
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             if (_busy)
               const Center(child: CircularProgressIndicator())
             else if (kIsWeb)
@@ -158,7 +171,9 @@ class _ExportSheetState extends State<ExportSheet> {
               const SizedBox(height: 12),
               Center(
                 child: Text(_status!,
-                    style: const TextStyle(color: Colors.white70)),
+                    style: const TextStyle(
+                        color: MutapixelTheme.secondaryText,
+                        fontSize: 13)),
               ),
             ],
           ],
@@ -172,14 +187,76 @@ class _ExportSheetState extends State<ExportSheet> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton.filled(
-          icon: Icon(icon),
-          onPressed: onPressed,
-          tooltip: label,
+        Material(
+          color: MutapixelTheme.primary,
+          borderRadius: BorderRadius.circular(999),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(999),
+            onTap: onPressed,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child:
+                  Icon(icon, size: 22, color: Colors.white),
+            ),
+          ),
         ),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 12)),
+        const SizedBox(height: 6),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: MutapixelTheme.ink)),
       ],
+    );
+  }
+}
+
+/// Premium pill chip for single-select options.
+class _SelectChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  const _SelectChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onSelected,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected
+                ? MutapixelTheme.primary
+                : MutapixelTheme.subtleFill,
+            borderRadius: BorderRadius.circular(999),
+            border: selected
+                ? null
+                : Border.all(color: MutapixelTheme.hairline),
+            boxShadow:
+                selected ? MutapixelTheme.pillShadow : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight:
+                  selected ? FontWeight.w600 : FontWeight.w500,
+              color:
+                  selected ? Colors.white : MutapixelTheme.ink,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
