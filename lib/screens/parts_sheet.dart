@@ -15,7 +15,18 @@ class PartsSheet extends StatefulWidget {
 class _PartsSheetState extends State<PartsSheet> {
   String _category = 'eyes';
 
-  static const _categories = ['eyes', 'mouths', 'hats', 'extras'];
+  static const _categories = [
+    'eyes',
+    'mouths',
+    'hats',
+    'hair',
+    'features',
+    'bodies',
+    'arms',
+    'legs',
+    'wings',
+    'extras'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +137,18 @@ class _PartsSheetState extends State<PartsSheet> {
         return 'Mouths';
       case 'hats':
         return 'Hats';
+      case 'hair':
+        return 'Hair';
+      case 'features':
+        return 'Noses & Ears';
+      case 'bodies':
+        return 'Bodies';
+      case 'arms':
+        return 'Arms';
+      case 'legs':
+        return 'Legs';
+      case 'wings':
+        return 'Wings & Tails';
       case 'extras':
         return 'Extras';
       default:
