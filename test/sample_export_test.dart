@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sprite_builder/data/starter_templates.dart';
-import 'package:sprite_builder/services/sprite_exporter.dart';
+import 'package:mutapixel/data/starter_templates.dart';
+import 'package:mutapixel/services/sprite_exporter.dart';
 
 /// Generates real export PNGs so the pipeline can be eyeballed.
 /// Run with: flutter test test/sample_export_test.dart

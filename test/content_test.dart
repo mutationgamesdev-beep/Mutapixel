@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sprite_builder/data/palette_presets.dart';
-import 'package:sprite_builder/data/starter_templates.dart';
+import 'package:mutapixel/data/palette_presets.dart';
+import 'package:mutapixel/data/starter_templates.dart';
 
 void main() {
   group('PalettePresets', () {
