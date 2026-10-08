@@ -67,7 +67,7 @@ class _ExportSheetState extends State<ExportSheet> {
         final file = await SaveService.makeShareFile(bytes, name);
         await Share.shareXFiles(
           [file],
-          text: 'Made with Sprite Builder',
+          text: 'Made with Mutapixel',
         );
       });
 
