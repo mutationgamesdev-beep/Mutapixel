@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/sprite_parts.dart';
 import '../models/sprite_frame.dart';
 import '../services/sprite_effects.dart';
+import '../theme/mutapixel_theme.dart';
 
 /// Step-by-step character builder for people who don't draw.
 /// Body -> eyes -> mouth -> hat -> colors -> done.
@@ -100,35 +101,44 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
         children: [
           // Step indicator.
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
             child: Row(
               children: [
                 for (var i = 0; i < _steps.length; i++) ...[
                   _stepDot(i),
                   if (i < _steps.length - 1)
-                    Expanded(child: Container(height: 2, color: Colors.white12)),
+                    const Expanded(
+                        child: _StepConnector()),
                 ],
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               _stepTitle(),
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  fontSize: 17, fontWeight: FontWeight.w600),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Step ${_step + 1} of ${_steps.length}',
+              style: const TextStyle(
+                fontSize: 13,
+                color: MutapixelTheme.secondaryText,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           // Live preview.
           Container(
             width: 160,
             height: 160,
-            decoration: BoxDecoration(
-              color: const Color(0xFF14141C),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white12),
-            ),
+            decoration: MutapixelTheme.cardDecoration(
+                radius: MutapixelTheme.smallCardRadius),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: CustomPaint(
@@ -144,7 +154,7 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
           ),
           // Nav buttons.
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -198,30 +208,37 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
   Widget _stepDot(int i) {
     final done = i < _step;
     final current = i == _step;
+    final filled = done || current;
     return Container(
       width: 28,
       height: 28,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: current
-            ? Theme.of(context).colorScheme.primary
-            : done
-                ? Colors.green
-                : Colors.white12,
+        color: filled
+            ? MutapixelTheme.primary
+            : MutapixelTheme.subtleFill,
+        border: filled
+            ? null
+            : Border.all(color: MutapixelTheme.hairline),
+        boxShadow: current ? MutapixelTheme.pillShadow : null,
       ),
       child: Center(
         child: done
             ? const Icon(Icons.check, size: 16, color: Colors.white)
             : Text('${i + 1}',
-                style: const TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: current
+                        ? Colors.white
+                        : MutapixelTheme.secondaryText)),
       ),
     );
   }
 
   Widget _partsGrid(List<SpritePart> parts) {
     return GridView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         mainAxisSpacing: 12,
@@ -236,14 +253,24 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
           onTap: () => _pick(p),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E28),
-              borderRadius: BorderRadius.circular(12),
+              color: MutapixelTheme.surface,
+              borderRadius: BorderRadius.circular(
+                  MutapixelTheme.smallCardRadius),
               border: Border.all(
                 color: selected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.white12,
-                width: selected ? 2.5 : 1,
+                    ? MutapixelTheme.primary
+                    : MutapixelTheme.hairline,
+                width: selected ? 2 : 1,
               ),
+              boxShadow: selected
+                  ? MutapixelTheme.pillShadow
+                  : const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        blurRadius: 16,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
             ),
             child: Column(
               children: [
@@ -257,9 +284,12 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: 10),
                   child: Text(p.name,
-                      style: const TextStyle(fontSize: 12)),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: MutapixelTheme.ink)),
                 ),
               ],
             ),
@@ -286,7 +316,7 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
 
   Widget _themeGrid() {
     return GridView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         mainAxisSpacing: 12,
@@ -301,14 +331,24 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
           onTap: () => setState(() => _themeColor = theme.$2),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E28),
-              borderRadius: BorderRadius.circular(12),
+              color: MutapixelTheme.surface,
+              borderRadius: BorderRadius.circular(
+                  MutapixelTheme.smallCardRadius),
               border: Border.all(
                 color: selected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.white12,
-                width: selected ? 2.5 : 1,
+                    ? MutapixelTheme.primary
+                    : MutapixelTheme.hairline,
+                width: selected ? 2 : 1,
               ),
+              boxShadow: selected
+                  ? MutapixelTheme.pillShadow
+                  : const [
+                      BoxShadow(
+                        color: Color(0x0A000000),
+                        blurRadius: 16,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -319,16 +359,37 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
                   decoration: BoxDecoration(
                     color: theme.$2,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white24),
+                    border: Border.all(
+                        color: MutapixelTheme.hairline),
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(theme.$1, style: const TextStyle(fontSize: 12)),
+                Text(theme.$1,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: MutapixelTheme.ink)),
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _StepConnector extends StatelessWidget {
+  const _StepConnector();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 2,
+      margin: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: MutapixelTheme.hairline,
+        borderRadius: BorderRadius.circular(1),
+      ),
     );
   }
 }
