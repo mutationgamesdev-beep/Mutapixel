@@ -126,9 +126,9 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               'Step ${_step + 1} of ${_steps.length}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: MutapixelTheme.secondaryText,
+                color: MutapixelTheme.of(context).secondaryText,
               ),
             ),
           ),
@@ -137,8 +137,7 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
           Container(
             width: 160,
             height: 160,
-            decoration: MutapixelTheme.cardDecoration(
-                radius: MutapixelTheme.smallCardRadius),
+            decoration: MutapixelTheme.cardDecoration(context, radius: MutapixelTheme.smallCardRadius),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: CustomPaint(
@@ -216,10 +215,10 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
         shape: BoxShape.circle,
         color: filled
             ? MutapixelTheme.primary
-            : MutapixelTheme.subtleFill,
+            : MutapixelTheme.of(context).subtleFill,
         border: filled
             ? null
-            : Border.all(color: MutapixelTheme.hairline),
+            : Border.all(color: MutapixelTheme.of(context).hairline),
         boxShadow: current ? MutapixelTheme.pillShadow : null,
       ),
       child: Center(
@@ -231,7 +230,7 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
                     fontWeight: FontWeight.w600,
                     color: current
                         ? Colors.white
-                        : MutapixelTheme.secondaryText)),
+                        : MutapixelTheme.of(context).secondaryText)),
       ),
     );
   }
@@ -253,13 +252,13 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
           onTap: () => _pick(p),
           child: Container(
             decoration: BoxDecoration(
-              color: MutapixelTheme.surface,
+              color: MutapixelTheme.of(context).surface,
               borderRadius: BorderRadius.circular(
                   MutapixelTheme.smallCardRadius),
               border: Border.all(
                 color: selected
                     ? MutapixelTheme.primary
-                    : MutapixelTheme.hairline,
+                    : MutapixelTheme.of(context).hairline,
                 width: selected ? 2 : 1,
               ),
               boxShadow: selected
@@ -286,10 +285,10 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: Text(p.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: MutapixelTheme.ink)),
+                          color: MutapixelTheme.of(context).ink)),
                 ),
               ],
             ),
@@ -331,13 +330,13 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
           onTap: () => setState(() => _themeColor = theme.$2),
           child: Container(
             decoration: BoxDecoration(
-              color: MutapixelTheme.surface,
+              color: MutapixelTheme.of(context).surface,
               borderRadius: BorderRadius.circular(
                   MutapixelTheme.smallCardRadius),
               border: Border.all(
                 color: selected
                     ? MutapixelTheme.primary
-                    : MutapixelTheme.hairline,
+                    : MutapixelTheme.of(context).hairline,
                 width: selected ? 2 : 1,
               ),
               boxShadow: selected
@@ -360,15 +359,15 @@ class _GuidedBuilderState extends State<GuidedBuilder> {
                     color: theme.$2,
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: MutapixelTheme.hairline),
+                        color: MutapixelTheme.of(context).hairline),
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(theme.$1,
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: MutapixelTheme.ink)),
+                        color: MutapixelTheme.of(context).ink)),
               ],
             ),
           ),
@@ -387,7 +386,7 @@ class _StepConnector extends StatelessWidget {
       height: 2,
       margin: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        color: MutapixelTheme.hairline,
+        color: MutapixelTheme.of(context).hairline,
         borderRadius: BorderRadius.circular(1),
       ),
     );
