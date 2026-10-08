@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 
 import '../models/sprite_frame.dart';
+import 'parts_eyes2.dart';
+import 'parts_mouths2.dart';
+import 'parts_hats2.dart';
+import 'parts_hair.dart';
+import 'parts_bodies2.dart';
+import 'parts_arms.dart';
+import 'parts_legs.dart';
+import 'parts_extras2.dart';
+import 'parts_wings.dart';
+import 'parts_features.dart';
 
 /// A mix-and-match sprite part, defined as text rows where each character
 /// maps to a color ('.' is always transparent). Parts are stamped onto a
-/// canvas by the guided builder.
+/// canvas by the guided builder and the parts picker.
+/// Categories: 'bodies', 'eyes', 'mouths', 'hats', 'hair', 'features',
+/// 'arms', 'legs', 'wings', 'extras'.
 class SpritePart {
   final String name;
-  final String category; // 'bodies', 'eyes', 'mouths', 'hats', 'extras'
+  final String category; // 'bodies', 'eyes', 'mouths', 'hats', 'hair',
+  // 'features', 'arms', 'legs', 'wings', 'extras'
   final List<String> rows;
   final Map<String, Color> colors;
 
@@ -458,6 +471,16 @@ class SpriteParts {
     tinyShield,
     magicWand,
     heart,
+    ...EyesParts2.all,
+    ...MouthsParts2.all,
+    ...HatsParts2.all,
+    ...HairParts.all,
+    ...BodiesParts2.all,
+    ...ArmsParts.all,
+    ...LegsParts.all,
+    ...ExtrasParts2.all,
+    ...WingsParts.all,
+    ...FeaturesParts.all,
   ];
 
   static List<SpritePart> byCategory(String c) =>
