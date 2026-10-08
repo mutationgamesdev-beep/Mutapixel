@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sprite_builder/models/sprite_frame.dart';
+import 'package:mutapixel/models/sprite_frame.dart';
 
 void main() {
   group('SpriteFrame', () {

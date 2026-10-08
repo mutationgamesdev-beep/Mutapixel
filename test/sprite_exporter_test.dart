@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
-import 'package:sprite_builder/models/sprite_frame.dart';
-import 'package:sprite_builder/services/sprite_exporter.dart';
+import 'package:mutapixel/models/sprite_frame.dart';
+import 'package:mutapixel/services/sprite_exporter.dart';
 
 SpriteFrame _testFrame() {
   final frame = SpriteFrame(width: 4, height: 4);
