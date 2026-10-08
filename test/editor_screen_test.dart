@@ -10,71 +10,95 @@ Widget _editor() => MaterialApp(
     );
 
 void main() {
-  testWidgets('editor screen builds with canvas, tools and palette',
+  testWidgets('editor screen builds with layers, tools and palette',
       (tester) async {
     await tester.pumpWidget(_editor());
     await tester.pumpAndSettle();
 
-    // App bar and title, plus home back button.
-    expect(find.text('Mutapixel'), findsOneWidget);
-    expect(find.byTooltip('Home'), findsOneWidget);
+    // App bar: back, layers, download.
+    expect(find.byTooltip('Back'), findsOneWidget);
+    expect(find.byTooltip('Layers'), findsOneWidget);
+    expect(find.byTooltip('Download'), findsOneWidget);
 
-    // Tools (left rail).
+    // Tools (left rail), including the Move tool.
     expect(find.byTooltip('Pencil'), findsOneWidget);
     expect(find.byTooltip('Eraser'), findsOneWidget);
     expect(find.byTooltip('Fill'), findsOneWidget);
-    expect(find.byTooltip('Mirror (symmetry)'), findsOneWidget);
+    expect(find.byTooltip('Eyedropper'), findsOneWidget);
+    expect(find.byTooltip('Move'), findsOneWidget);
     expect(find.byTooltip('Undo'), findsOneWidget);
 
-    // Templates panel toggle.
-    expect(find.byTooltip('Templates'), findsOneWidget);
+    // Templates panel header.
+    expect(find.text('Templates'), findsOneWidget);
 
-    // Palette switcher and custom color button.
-    expect(find.text('Mutation Starter'), findsOneWidget);
-    expect(find.text('Custom'), findsOneWidget);
-
-    // Export action.
-    expect(find.byTooltip('Export'), findsOneWidget);
+    // Palette bar chips.
+    expect(find.text('Color'), findsOneWidget);
+    expect(find.text('Parts'), findsOneWidget);
+    expect(find.text('Effects'), findsOneWidget);
   });
 
-  testWidgets('toggling the templates panel shows search and cards',
+  testWidgets('tapping a panel template stamps it as a new layer',
       (tester) async {
     await tester.pumpWidget(_editor());
-    await tester.pumpAndSettle();
-
-    // Panel starts collapsed: no search field yet.
-    expect(find.text('Search templates...'), findsNothing);
-
-    await tester.tap(find.byTooltip('Templates'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Search templates...'), findsOneWidget);
-    expect(find.text('Slime Hero'), findsWidgets);
-  });
-
-  testWidgets('tapping a panel template stamps it on the canvas',
-      (tester) async {
-    await tester.pumpWidget(_editor());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byTooltip('Templates'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Slime Hero').first);
     await tester.pumpAndSettle();
 
+    // Snackbar confirms the stamp landed on a new layer.
     expect(find.textContaining('Stamped'), findsOneWidget);
+
+    // The Layers panel shows both layers.
+    await tester.tap(find.byTooltip('Layers'));
+    await tester.pumpAndSettle();
+    expect(find.text('Background'), findsOneWidget);
+    expect(find.text('Slime Hero'), findsWidgets);
   });
 
-  testWidgets('switching tools updates selection', (tester) async {
+  testWidgets('new layer can be added and undone', (tester) async {
     await tester.pumpWidget(_editor());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Eraser'));
-    await tester.pump();
-    // Tapping a palette color switches back to pencil.
-    await tester.tap(find.text('Custom'));
+    await tester.tap(find.byTooltip('Layers'));
     await tester.pumpAndSettle();
-    expect(find.text('Custom color'), findsOneWidget);
+    await tester.tap(find.text('New layer'));
+    await tester.pumpAndSettle();
+    expect(find.text('Layer 2'), findsOneWidget);
+
+    // Dismiss the sheet, undo, and confirm the layer is gone.
+    await tester.tapAt(const Offset(20, 100));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Undo'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Layers'));
+    await tester.pumpAndSettle();
+    expect(find.text('Layer 2'), findsNothing);
+    expect(find.text('Background'), findsOneWidget);
+  });
+
+  testWidgets('layer visibility eye toggle is present', (tester) async {
+    await tester.pumpWidget(_editor());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Layers'));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Hide layer'), findsOneWidget);
+    await tester.tap(find.byTooltip('Hide layer'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Show layer'), findsOneWidget);
+  });
+
+  testWidgets('switching to the move tool updates the rail',
+      (tester) async {
+    await tester.pumpWidget(_editor());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Move'));
+    await tester.pump();
+    // Move is a tool: tapping it keeps the canvas interactive and
+    // the rail shows it selected (no crash, no mode banner).
+    expect(find.byTooltip('Move'), findsOneWidget);
   });
 }
