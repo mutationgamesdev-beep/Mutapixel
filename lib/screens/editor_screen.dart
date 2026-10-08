@@ -636,6 +636,10 @@ class _EditorScreenState extends State<EditorScreen> {
                       stampFrame: _stampPart,
                       onStrokeStart: _pushUndo,
                       onChanged: () => setState(() {}),
+                      onColorPicked: (color) => setState(() {
+                        _drawColor = color;
+                        _tool = CanvasTool.pencil;
+                      }),
                     ),
                   );
                 },
@@ -769,7 +773,8 @@ class _EditorScreenState extends State<EditorScreen> {
                       return GestureDetector(
                         onTap: () => setState(() {
                           _drawColor = color;
-                          if (_tool == CanvasTool.eraser) {
+                          if (_tool == CanvasTool.eraser ||
+                              _tool == CanvasTool.eyedropper) {
                             _tool = CanvasTool.pencil;
                           }
                         }),
@@ -969,6 +974,8 @@ class _EditorScreenState extends State<EditorScreen> {
                           Icons.auto_fix_high, 'Eraser'),
                       _sideRailToolButton(CanvasTool.fill,
                           Icons.format_color_fill, 'Fill'),
+                      _sideRailToolButton(CanvasTool.eyedropper,
+                          Icons.colorize, 'Eyedropper'),
                       Container(
                         height: 1,
                         margin: const EdgeInsets.symmetric(
@@ -1016,7 +1023,10 @@ class _EditorScreenState extends State<EditorScreen> {
       icon: icon,
       tip: tip,
       selected: _tool == tool,
-      onTap: () => setState(() => _tool = tool),
+      onTap: () => setState(() {
+        _tool = tool;
+        if (tool != CanvasTool.stamp) _exitStampMode();
+      }),
     );
   }
 
