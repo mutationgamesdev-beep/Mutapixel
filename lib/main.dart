@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'screens/editor_screen.dart';
 import 'theme/mutapixel_theme.dart';
+import 'theme/theme_controller.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ThemeController.load();
   runApp(const SpriteBuilderApp());
 }
 
@@ -12,11 +15,18 @@ class SpriteBuilderApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mutapixel',
-      debugShowCheckedModeBanner: false,
-      theme: MutapixelTheme.light(),
-      home: const EditorScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeController.mode,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'Mutapixel',
+          debugShowCheckedModeBanner: false,
+          theme: MutapixelTheme.light(),
+          darkTheme: MutapixelTheme.dark(),
+          themeMode: mode,
+          home: const EditorScreen(),
+        );
+      },
     );
   }
 }
