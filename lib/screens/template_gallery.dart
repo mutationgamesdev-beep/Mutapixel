@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/template_library.dart';
 import '../models/sprite_frame.dart';
+import '../theme/mutapixel_theme.dart';
 
 /// Canva-style template gallery: pick a ready-made sprite by category.
 class TemplateGallery extends StatefulWidget {
@@ -21,19 +22,21 @@ class _TemplateGalleryState extends State<TemplateGallery> {
       appBar: AppBar(
         title: const Text('Templates'),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
+          preferredSize: const Size.fromHeight(52),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
                 for (final c in TemplateLibrary.categories)
                   Padding(
-                    padding: const EdgeInsets.only(right: 8, bottom: 8),
-                    child: ChoiceChip(
-                      label: Text(_label(c)),
+                    padding:
+                        const EdgeInsets.only(right: 8, bottom: 12),
+                    child: _CategoryChip(
+                      label: _label(c),
                       selected: _category == c,
-                      onSelected: (_) =>
+                      onSelected: () =>
                           setState(() => _category = c),
                     ),
                   ),
@@ -43,8 +46,9 @@ class _TemplateGalleryState extends State<TemplateGallery> {
         ),
       ),
       body: GridView.builder(
-        padding: const EdgeInsets.all(12),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        padding: const EdgeInsets.all(16),
+        gridDelegate:
+            const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
@@ -56,28 +60,33 @@ class _TemplateGalleryState extends State<TemplateGallery> {
           return GestureDetector(
             onTap: () => Navigator.of(context).pop(t),
             child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E1E28),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white12),
-              ),
+              decoration: MutapixelTheme.cardDecoration(
+                  radius: MutapixelTheme.smallCardRadius),
               child: Column(
                 children: [
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(10),
                       child: CustomPaint(
-                        painter: _TemplatePreview(frame: t.toFrame()),
+                        painter:
+                            _TemplatePreview(frame: t.toFrame()),
                         child: const SizedBox.expand(),
                       ),
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.only(
+                        left: 8, right: 8, bottom: 10),
                     child: Text(
                       t.name,
-                      style: const TextStyle(fontSize: 12),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: MutapixelTheme.ink,
+                      ),
                       textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -110,6 +119,57 @@ class _TemplateGalleryState extends State<TemplateGallery> {
       default:
         return category;
     }
+  }
+}
+
+/// Premium pill chip: selected = filled indigo, unselected = subtle gray.
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  const _CategoryChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onSelected,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected
+                ? MutapixelTheme.primary
+                : MutapixelTheme.subtleFill,
+            borderRadius: BorderRadius.circular(999),
+            border: selected
+                ? null
+                : Border.all(color: MutapixelTheme.hairline),
+            boxShadow:
+                selected ? MutapixelTheme.pillShadow : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight:
+                  selected ? FontWeight.w600 : FontWeight.w500,
+              color: selected
+                  ? Colors.white
+                  : MutapixelTheme.ink,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
