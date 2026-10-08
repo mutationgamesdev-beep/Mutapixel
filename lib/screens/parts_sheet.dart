@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/sprite_parts.dart';
 import '../models/sprite_frame.dart';
+import '../theme/mutapixel_theme.dart';
 
 /// Bottom sheet: pick a mix-and-match part to stamp onto the canvas.
 class PartsSheet extends StatefulWidget {
@@ -24,35 +25,39 @@ class _PartsSheetState extends State<PartsSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+            padding: EdgeInsets.fromLTRB(20, 8, 20, 4),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text('Parts',
-                  style:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600)),
             ),
           ),
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: 20),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text('Tap a part, then tap the canvas to stamp it.',
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              child: Text(
+                  'Tap a part, then tap the canvas to stamp it.',
+                  style: TextStyle(
+                      color: MutapixelTheme.secondaryText,
+                      fontSize: 13)),
             ),
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 20, vertical: 12),
             child: Row(
               children: [
                 for (final c in _categories)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(_label(c)),
+                    child: _CategoryChip(
+                      label: _label(c),
                       selected: _category == c,
-                      onSelected: (_) =>
+                      onSelected: () =>
                           setState(() => _category = c),
                     ),
                   ),
@@ -62,7 +67,7 @@ class _PartsSheetState extends State<PartsSheet> {
           SizedBox(
             height: 220,
             child: GridView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               gridDelegate:
                   const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 4,
@@ -76,11 +81,8 @@ class _PartsSheetState extends State<PartsSheet> {
                 return GestureDetector(
                   onTap: () => Navigator.of(context).pop(p),
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E28),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white12),
-                    ),
+                    decoration: MutapixelTheme.cardDecoration(
+                        radius: 12),
                     child: Column(
                       children: [
                         Expanded(
@@ -94,9 +96,13 @@ class _PartsSheetState extends State<PartsSheet> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
+                          padding:
+                              const EdgeInsets.only(bottom: 8),
                           child: Text(p.name,
-                              style: const TextStyle(fontSize: 10),
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: MutapixelTheme.ink),
                               textAlign: TextAlign.center,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis),
@@ -126,6 +132,57 @@ class _PartsSheetState extends State<PartsSheet> {
       default:
         return category;
     }
+  }
+}
+
+/// Premium pill chip: selected = filled indigo, unselected = subtle gray.
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  const _CategoryChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onSelected,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected
+                ? MutapixelTheme.primary
+                : MutapixelTheme.subtleFill,
+            borderRadius: BorderRadius.circular(999),
+            border: selected
+                ? null
+                : Border.all(color: MutapixelTheme.hairline),
+            boxShadow:
+                selected ? MutapixelTheme.pillShadow : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight:
+                  selected ? FontWeight.w600 : FontWeight.w500,
+              color: selected
+                  ? Colors.white
+                  : MutapixelTheme.ink,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
