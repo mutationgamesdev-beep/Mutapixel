@@ -99,6 +99,14 @@ class _TemplateGalleryState extends State<TemplateGallery> {
         return 'Animals';
       case 'items':
         return 'Items';
+      case 'food':
+        return 'Food';
+      case 'nature':
+        return 'Nature';
+      case 'space':
+        return 'Space';
+      case 'faces':
+        return 'Faces';
       default:
         return category;
     }
