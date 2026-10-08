@@ -545,4 +545,28 @@ class TemplateLibrary {
     'space',
     'faces',
   ];
+
+  /// Human-friendly label for a category id.
+  static String categoryLabel(String category) {
+    switch (category) {
+      case 'heroes':
+        return 'Heroes';
+      case 'monsters':
+        return 'Monsters';
+      case 'animals':
+        return 'Animals';
+      case 'items':
+        return 'Items';
+      case 'food':
+        return 'Food';
+      case 'nature':
+        return 'Nature';
+      case 'space':
+        return 'Space';
+      case 'faces':
+        return 'Faces';
+      default:
+        return category;
+    }
+  }
 }
