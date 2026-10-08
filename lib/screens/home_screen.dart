@@ -5,6 +5,7 @@ import '../models/sprite_frame.dart';
 import '../theme/mutapixel_theme.dart';
 import '../theme/theme_controller.dart';
 import '../widgets/template_preview.dart';
+import 'animation_screen.dart';
 import 'editor_screen.dart';
 import 'guided_builder.dart';
 
@@ -61,6 +62,13 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(
         builder: (_) => EditorScreen(initialFrame: frame),
       ),
+    );
+  }
+
+  void _openAnimation() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+          builder: (_) => const AnimationScreen()),
     );
   }
 
@@ -131,37 +139,54 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 20),
+            // Two big entry cards: pixel art + animation.
             Row(
               children: [
                 Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _showSizePicker,
-                    icon: const Icon(Icons.add, size: 20),
-                    label: const Text('Create new'),
+                  child: _bigCard(
+                    title: 'Pixel Art',
+                    subtitle: 'Draw & remix sprites',
+                    icon: Icons.brush,
+                    gradient: const [
+                      Color(0xFF6C5CE7),
+                      Color(0xFF4A3FB5),
+                    ],
+                    onTap: _showSizePicker,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _openGuidedBuilder,
-                    icon: const Icon(Icons.auto_awesome,
-                        size: 20),
-                    label: const Text('Guided builder'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor:
-                          MutapixelTheme.primary,
-                      side: const BorderSide(
-                          color: MutapixelTheme.primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(999),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                    ),
+                  child: _bigCard(
+                    title: 'Animation',
+                    subtitle: 'Bring sprites to life',
+                    icon: Icons.movie,
+                    gradient: const [
+                      Color(0xFFE84393),
+                      Color(0xFFB72C6E),
+                    ],
+                    onTap: _openAnimation,
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _openGuidedBuilder,
+              icon: const Icon(Icons.auto_awesome,
+                  size: 20),
+              label: const Text('Guided builder'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor:
+                    MutapixelTheme.primary,
+                side: const BorderSide(
+                    color: MutapixelTheme.primary),
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(999),
+                ),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 12),
+              ),
             ),
             const SizedBox(height: 28),
             // Search.
@@ -221,6 +246,70 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 8),
             _templateGrid(),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// A big gradient entry card (Pixel Art / Animation).
+  Widget _bigCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> gradient,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: onTap,
+        child: Ink(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: MutapixelTheme.pillShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color:
+                      Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon,
+                    size: 26, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.white
+                      .withValues(alpha: 0.85),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
