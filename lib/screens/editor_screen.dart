@@ -8,6 +8,7 @@ import '../data/template_library.dart';
 import '../data/sprite_parts.dart';
 import '../models/sprite_frame.dart';
 import '../models/sprite_palette.dart';
+import '../theme/mutapixel_theme.dart';
 import '../widgets/pixel_canvas.dart';
 import 'export_sheet.dart';
 import 'template_gallery.dart';
@@ -197,73 +198,78 @@ class _EditorScreenState extends State<EditorScreen> {
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('New sprite',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Start easy',
-                    style: TextStyle(color: Colors.white70)),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 4),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('New sprite',
+                      style: TextStyle(
+                          fontSize: 17, fontWeight: FontWeight.w600)),
+                ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.auto_awesome),
-              title: const Text('Character builder'),
-              subtitle: const Text('Step-by-step: body, face, hat, colors'),
-              onTap: () {
-                Navigator.of(context).pop();
-                _openGuidedBuilder();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.grid_view),
-              title: const Text('Template gallery'),
-              subtitle: const Text('Heroes, monsters, animals, items'),
-              onTap: () {
-                Navigator.of(context).pop();
-                _openTemplateGallery();
-              },
-            ),
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Start from a template',
-                    style: TextStyle(color: Colors.white70)),
-              ),
-            ),
-            for (final t in StarterTemplates.all)
+              _menuSectionLabel('Start easy'),
               ListTile(
-                leading: const Icon(Icons.image),
-                title: Text(t.name),
-                subtitle: Text(t.kind),
-                onTap: () => _newFromTemplate(t),
+                leading: const Icon(Icons.auto_awesome,
+                    color: MutapixelTheme.primary),
+                title: const Text('Character builder'),
+                subtitle: const Text('Step-by-step: body, face, hat, colors'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _openGuidedBuilder();
+                },
               ),
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Or start blank',
-                    style: TextStyle(color: Colors.white70)),
-              ),
-            ),
-            for (final size in _canvasSizes)
               ListTile(
-                leading: const Icon(Icons.grid_on),
-                title: Text('$size x $size'),
-                onTap: () => _newBlank(size),
+                leading: const Icon(Icons.grid_view,
+                    color: MutapixelTheme.primary),
+                title: const Text('Template gallery'),
+                subtitle:
+                    const Text('Heroes, monsters, animals, items and more'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _openTemplateGallery();
+                },
               ),
-            const SizedBox(height: 8),
-          ],
+              const Divider(),
+              _menuSectionLabel('Start from a template'),
+              for (final t in StarterTemplates.all)
+                ListTile(
+                  leading: const Icon(Icons.image),
+                  title: Text(t.name),
+                  subtitle: Text(t.kind),
+                  onTap: () => _newFromTemplate(t),
+                ),
+              const Divider(),
+              _menuSectionLabel('Or start blank'),
+              for (final size in _canvasSizes)
+                ListTile(
+                  leading: const Icon(Icons.grid_on),
+                  title: Text('$size x $size'),
+                  onTap: () => _newBlank(size),
+                ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _menuSectionLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: MutapixelTheme.secondaryText,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -287,8 +293,9 @@ class _EditorScreenState extends State<EditorScreen> {
                 height: 48,
                 decoration: BoxDecoration(
                   color: Color.fromARGB(255, r, g, b),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white24),
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      Border.all(color: MutapixelTheme.hairline),
                 ),
               ),
               const SizedBox(height: 12),
@@ -456,17 +463,23 @@ class _EditorScreenState extends State<EditorScreen> {
           if (_tool == CanvasTool.stamp)
             Container(
               width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
               padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 8),
-              color: Theme.of(context)
-                  .colorScheme
-                  .primary
-                  .withValues(alpha: 0.15),
+                  horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: MutapixelTheme.primary
+                    .withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: MutapixelTheme.primary
+                      .withValues(alpha: 0.25),
+                ),
+              ),
               child: Row(
                 children: [
-                  Icon(Icons.extension,
+                  const Icon(Icons.extension,
                       size: 18,
-                      color: Theme.of(context).colorScheme.primary),
+                      color: MutapixelTheme.primary),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text('Stamp mode: tap the canvas to place.',
@@ -480,14 +493,12 @@ class _EditorScreenState extends State<EditorScreen> {
                 ],
               ),
             ),
-          // Canvas.
+          // Canvas in a premium white card.
           Expanded(
             child: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF14141C),
-                borderRadius: BorderRadius.circular(12),
-              ),
+              margin: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(12),
+              decoration: MutapixelTheme.cardDecoration(),
               child: PixelCanvas(
                 frame: _frame,
                 drawColor: _drawColor,
@@ -502,7 +513,7 @@ class _EditorScreenState extends State<EditorScreen> {
           ),
           // Frame strip.
           SizedBox(
-            height: 76,
+            height: 84,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -510,18 +521,20 @@ class _EditorScreenState extends State<EditorScreen> {
               itemBuilder: (context, i) {
                 if (i == _frames.length) {
                   return Padding(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4, vertical: 14),
                     child: Row(
                       children: [
-                        IconButton(
-                          tooltip: 'Add frame',
-                          icon: const Icon(Icons.add),
-                          onPressed: () => _addFrame(),
+                        _frameActionButton(
+                          Icons.add,
+                          'Add frame',
+                          () => _addFrame(),
                         ),
-                        IconButton(
-                          tooltip: 'Duplicate frame',
-                          icon: const Icon(Icons.copy),
-                          onPressed: () => _addFrame(duplicate: true),
+                        const SizedBox(width: 8),
+                        _frameActionButton(
+                          Icons.copy,
+                          'Duplicate frame',
+                          () => _addFrame(duplicate: true),
                         ),
                       ],
                     ),
@@ -538,16 +551,20 @@ class _EditorScreenState extends State<EditorScreen> {
                     width: 60,
                     margin: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
+                      color: MutapixelTheme.surface,
                       border: Border.all(
                         color: selected
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.white24,
-                        width: selected ? 2.5 : 1,
+                            ? MutapixelTheme.primary
+                            : MutapixelTheme.hairline,
+                        width: selected ? 2 : 1,
                       ),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: selected
+                          ? MutapixelTheme.pillShadow
+                          : null,
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(7),
+                      borderRadius: BorderRadius.circular(11),
                       child: CustomPaint(
                         painter: _PreviewPainter(frame: _frames[i]),
                       ),
@@ -557,47 +574,19 @@ class _EditorScreenState extends State<EditorScreen> {
               },
             ),
           ),
-          // Toolbar.
+          // Toolbar: segmented control rail.
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _toolButton(CanvasTool.pencil, Icons.brush, 'Pencil'),
-                _toolButton(CanvasTool.eraser, Icons.auto_fix_high, 'Eraser'),
-                _toolButton(CanvasTool.fill, Icons.format_color_fill, 'Fill'),
-                IconButton(
-                  tooltip: 'Mirror (symmetry)',
-                  icon: const Icon(Icons.flip),
-                  color: _mirror
-                      ? Theme.of(context).colorScheme.primary
-                      : null,
-                  onPressed: () =>
-                      setState(() => _mirror = !_mirror),
-                ),
-                IconButton(
-                  tooltip: 'Undo',
-                  icon: const Icon(Icons.undo),
-                  onPressed: _undoStack.isEmpty ? null : _undo,
-                ),
-                IconButton(
-                  tooltip: 'Clear frame',
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () {
-                    _pushUndo();
-                    setState(() {
-                      _frames[_activeFrame] = SpriteFrame(
-                          width: _canvasSize, height: _canvasSize);
-                    });
-                  },
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 4),
+            child: Center(child: _toolRail()),
           ),
           // Palette bar.
           Container(
+            margin: const EdgeInsets.fromLTRB(12, 4, 12, 0),
             padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: MutapixelTheme.cardDecoration(
+                radius: MutapixelTheme.smallCardRadius),
             child: Column(
               children: [
                 Row(
@@ -606,11 +595,17 @@ class _EditorScreenState extends State<EditorScreen> {
                       tooltip: 'Choose palette',
                       child: Row(
                         children: [
-                          Text(_palette.name,
-                              style:
-                                  const TextStyle(color: Colors.white70)),
+                          Text(
+                            _palette.name,
+                            style: const TextStyle(
+                              color: MutapixelTheme.secondaryText,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                           const Icon(Icons.arrow_drop_down,
-                              color: Colors.white70),
+                              color:
+                                  MutapixelTheme.secondaryText),
                         ],
                       ),
                       onSelected: (p) => setState(() {
@@ -655,10 +650,13 @@ class _EditorScreenState extends State<EditorScreen> {
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: selected
-                                  ? Colors.white
-                                  : Colors.white24,
+                                  ? MutapixelTheme.primary
+                                  : MutapixelTheme.hairline,
                               width: selected ? 3 : 1,
                             ),
+                            boxShadow: selected
+                                ? MutapixelTheme.pillShadow
+                                : null,
                           ),
                         ),
                       );
@@ -668,19 +666,139 @@ class _EditorScreenState extends State<EditorScreen> {
               ],
             ),
           ),
-          SafeArea(child: Container()),
+          const SafeArea(child: SizedBox(height: 8)),
         ],
       ),
     );
   }
 
-  Widget _toolButton(CanvasTool tool, IconData icon, String tip) {
+  Widget _frameActionButton(
+      IconData icon, String tooltip, VoidCallback onPressed) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: MutapixelTheme.subtleFill,
+        borderRadius: BorderRadius.circular(999),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Icon(icon,
+                size: 20, color: MutapixelTheme.ink),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Segmented tool rail: selected tool is a filled indigo pill.
+  Widget _toolRail() {
+    return Container(
+      decoration: BoxDecoration(
+        color: MutapixelTheme.subtleFill,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: MutapixelTheme.hairline),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _railToolButton(
+              CanvasTool.pencil, Icons.brush, 'Pencil'),
+          _railToolButton(
+              CanvasTool.eraser, Icons.auto_fix_high, 'Eraser'),
+          _railToolButton(
+              CanvasTool.fill, Icons.format_color_fill, 'Fill'),
+          _railToggleButton(
+            Icons.flip,
+            'Mirror (symmetry)',
+            _mirror,
+            () => setState(() => _mirror = !_mirror),
+          ),
+          _railToggleButton(
+            Icons.undo,
+            'Undo',
+            false,
+            _undoStack.isEmpty ? null : _undo,
+          ),
+          _railToggleButton(
+            Icons.delete_outline,
+            'Clear frame',
+            false,
+            () {
+              _pushUndo();
+              setState(() {
+                _frames[_activeFrame] = SpriteFrame(
+                    width: _canvasSize, height: _canvasSize);
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _railToolButton(
+      CanvasTool tool, IconData icon, String tip) {
     final selected = _tool == tool;
-    return IconButton(
-      tooltip: tip,
-      icon: Icon(icon),
-      color: selected ? Theme.of(context).colorScheme.primary : null,
-      onPressed: () => setState(() => _tool = tool),
+    return _railPill(
+      tip: tip,
+      selected: selected,
+      onTap: () => setState(() => _tool = tool),
+      icon: icon,
+    );
+  }
+
+  Widget _railToggleButton(IconData icon, String tip, bool active,
+      VoidCallback? onTap) {
+    return _railPill(
+      tip: tip,
+      selected: active,
+      onTap: onTap,
+      icon: icon,
+    );
+  }
+
+  Widget _railPill({
+    required String tip,
+    required bool selected,
+    required IconData icon,
+    VoidCallback? onTap,
+  }) {
+    final enabled = onTap != null;
+    return Tooltip(
+      message: tip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: selected
+                  ? MutapixelTheme.primary
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow:
+                  selected ? MutapixelTheme.pillShadow : null,
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: selected
+                  ? Colors.white
+                  : enabled
+                      ? MutapixelTheme.ink
+                      : MutapixelTheme.secondaryText
+                          .withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
