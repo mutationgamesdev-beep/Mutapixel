@@ -2,16 +2,23 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../models/art_layer.dart';
 import '../models/sprite_frame.dart';
 import '../services/save_service.dart';
 import '../services/sprite_exporter.dart';
 import '../theme/mutapixel_theme.dart';
 
 /// Export options: PNG or sprite sheet, scale, then save / share.
+/// When [layers] has more than one layer, a "Layers (.zip)" option
+/// is offered: one PNG per visible layer plus the flattened
+/// `complete.png`.
 class ExportSheet extends StatefulWidget {
   final List<SpriteFrame> frames;
 
-  const ExportSheet({super.key, required this.frames});
+  /// When set (and longer than 1), offers the layered ZIP export.
+  final List<ArtLayer>? layers;
+
+  const ExportSheet({super.key, required this.frames, this.layers});
 
   @override
   State<ExportSheet> createState() => _ExportSheetState();
@@ -23,6 +30,9 @@ class _ExportSheetState extends State<ExportSheet> {
   int _columns = 4;
   bool _busy = false;
   String? _status;
+
+  bool get _showZip =>
+      widget.layers != null && widget.layers!.length > 1;
 
   Future<void> _run(
     String label,
@@ -71,6 +81,37 @@ class _ExportSheetState extends State<ExportSheet> {
           text: 'Made with Mutapixel',
         );
       });
+
+  /// Layered ZIP export: one PNG per visible layer + complete.png.
+  Future<void> _downloadZip() async {
+    setState(() {
+      _busy = true;
+      _status = null;
+    });
+    try {
+      final zip = SpriteExporter.encodeLayersZip(
+        widget.layers!,
+        scale: _scale,
+      );
+      final name =
+          'mutapixel_layers_${DateTime.now().millisecondsSinceEpoch}.zip';
+      if (kIsWeb) {
+        await SaveService.saveToGallery(zip, name);
+        if (mounted) setState(() => _status = 'Layers ZIP downloaded!');
+      } else {
+        final file = await SaveService.makeShareFile(zip, name);
+        await Share.shareXFiles(
+          [file],
+          text: 'My Mutapixel layers',
+        );
+        if (mounted) setState(() => _status = 'Layers ZIP shared!');
+      }
+    } catch (e) {
+      if (mounted) setState(() => _status = 'Layers ZIP failed: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +195,9 @@ class _ExportSheetState extends State<ExportSheet> {
                 children: [
                   _actionButton(
                       Icons.download, 'Download', _saveToGallery),
+                  if (_showZip)
+                    _actionButton(
+                        Icons.folder_zip, 'Layers ZIP', _downloadZip),
                   _actionButton(Icons.ios_share, 'Share', _share),
                 ],
               )
@@ -164,6 +208,9 @@ class _ExportSheetState extends State<ExportSheet> {
                   _actionButton(
                       Icons.photo_library, 'Gallery', _saveToGallery),
                   _actionButton(Icons.folder, 'Files', _saveToFiles),
+                  if (_showZip)
+                    _actionButton(
+                        Icons.folder_zip, 'Layers ZIP', _downloadZip),
                   _actionButton(Icons.ios_share, 'Share', _share),
                 ],
               ),
