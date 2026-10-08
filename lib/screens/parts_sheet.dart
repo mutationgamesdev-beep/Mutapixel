@@ -34,14 +34,14 @@ class _PartsSheetState extends State<PartsSheet> {
                       fontWeight: FontWeight.w600)),
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
                   'Tap a part, then tap the canvas to stamp it.',
                   style: TextStyle(
-                      color: MutapixelTheme.secondaryText,
+                      color: MutapixelTheme.of(context).secondaryText,
                       fontSize: 13)),
             ),
           ),
@@ -81,8 +81,7 @@ class _PartsSheetState extends State<PartsSheet> {
                 return GestureDetector(
                   onTap: () => Navigator.of(context).pop(p),
                   child: Container(
-                    decoration: MutapixelTheme.cardDecoration(
-                        radius: 12),
+                    decoration: MutapixelTheme.cardDecoration(context, radius: 12),
                     child: Column(
                       children: [
                         Expanded(
@@ -99,10 +98,10 @@ class _PartsSheetState extends State<PartsSheet> {
                           padding:
                               const EdgeInsets.only(bottom: 8),
                           child: Text(p.name,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
-                                  color: MutapixelTheme.ink),
+                                  color: MutapixelTheme.of(context).ink),
                               textAlign: TextAlign.center,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis),
@@ -161,11 +160,11 @@ class _CategoryChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? MutapixelTheme.primary
-                : MutapixelTheme.subtleFill,
+                : MutapixelTheme.of(context).subtleFill,
             borderRadius: BorderRadius.circular(999),
             border: selected
                 ? null
-                : Border.all(color: MutapixelTheme.hairline),
+                : Border.all(color: MutapixelTheme.of(context).hairline),
             boxShadow:
                 selected ? MutapixelTheme.pillShadow : null,
           ),
@@ -177,7 +176,7 @@ class _CategoryChip extends StatelessWidget {
                   selected ? FontWeight.w600 : FontWeight.w500,
               color: selected
                   ? Colors.white
-                  : MutapixelTheme.ink,
+                  : MutapixelTheme.of(context).ink,
             ),
           ),
         ),
