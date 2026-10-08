@@ -288,7 +288,7 @@ class _EditorScreenState extends State<EditorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sprite Builder'),
+        title: const Text('Mutapixel'),
         actions: [
           IconButton(
             tooltip: 'New sprite',
