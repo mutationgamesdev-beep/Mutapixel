@@ -185,6 +185,11 @@ class _PixelCanvasState extends State<PixelCanvas> {
             painter: _CanvasPainter(
               frame: widget.frame,
               showGrid: widget.showGrid,
+              gridColor: MutapixelTheme.of(context)
+                  .ink
+                  .withValues(alpha: 0.07),
+              borderColor:
+                  MutapixelTheme.of(context).hairline,
             ),
           ),
         );
@@ -196,8 +201,15 @@ class _PixelCanvasState extends State<PixelCanvas> {
 class _CanvasPainter extends CustomPainter {
   final SpriteFrame frame;
   final bool showGrid;
+  final Color gridColor;
+  final Color borderColor;
 
-  _CanvasPainter({required this.frame, required this.showGrid});
+  _CanvasPainter({
+    required this.frame,
+    required this.showGrid,
+    required this.gridColor,
+    required this.borderColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -235,7 +247,7 @@ class _CanvasPainter extends CustomPainter {
     // Grid.
     if (showGrid) {
       final gridPaint = Paint()
-        ..color = MutapixelTheme.ink.withValues(alpha: 0.07)
+        ..color = gridColor
         ..strokeWidth = 1;
       for (var x = 0; x <= frame.width; x++) {
         final dx = ox + x * clamped;
@@ -263,7 +275,7 @@ class _CanvasPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5
-        ..color = MutapixelTheme.hairline,
+        ..color = borderColor,
     );
   }
 
