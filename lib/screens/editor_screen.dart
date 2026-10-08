@@ -12,14 +12,26 @@ import '../theme/mutapixel_theme.dart';
 import '../theme/theme_controller.dart';
 import '../widgets/pixel_canvas.dart';
 import 'export_sheet.dart';
-import 'template_gallery.dart';
+import 'templates_panel.dart';
 import 'parts_sheet.dart';
 import 'effects_sheet.dart';
 import 'guided_builder.dart';
 
 /// The main Mutapixel editor: canvas, tools, palettes and frames.
+///
+/// Opens blank by default; [initialTemplate] or [initialFrame] preload
+/// the canvas (from the home screen).
 class EditorScreen extends StatefulWidget {
-  const EditorScreen({super.key});
+  final ArtTemplate? initialTemplate;
+  final SpriteFrame? initialFrame;
+  final int initialCanvasSize;
+
+  const EditorScreen({
+    super.key,
+    this.initialTemplate,
+    this.initialFrame,
+    this.initialCanvasSize = 16,
+  });
 
   @override
   State<EditorScreen> createState() => _EditorScreenState();
@@ -39,6 +51,10 @@ class _EditorScreenState extends State<EditorScreen> {
   bool _mirror = false;
   bool _showGrid = true;
   bool _railCollapsed = false;
+  bool _templatesPanelOpen = false;
+
+  /// Key for the canvas, used to convert drag-drop offsets to pixels.
+  final GlobalKey _canvasKey = GlobalKey();
 
   /// Part selected for stamping (null when not in stamp mode).
   SpriteFrame? _stampPart;
@@ -51,6 +67,18 @@ class _EditorScreenState extends State<EditorScreen> {
   void initState() {
     super.initState();
     _drawColor = _palette.colors.first;
+    // Preload from the home screen when provided.
+    if (widget.initialFrame != null) {
+      _canvasSize = widget.initialFrame!.width;
+      _frames = [widget.initialFrame!];
+    } else if (widget.initialTemplate != null) {
+      final frame = widget.initialTemplate!.toFrame();
+      _canvasSize = frame.width;
+      _frames = [frame];
+    } else {
+      _canvasSize = widget.initialCanvasSize;
+      _frames = [SpriteFrame(width: _canvasSize, height: _canvasSize)];
+    }
   }
 
   // ---------- undo ----------
@@ -115,19 +143,57 @@ class _EditorScreenState extends State<EditorScreen> {
 
   // ---------- Canva-style: templates, parts, effects, guided builder ----------
 
-  Future<void> _openTemplateGallery() async {
-    final template = await Navigator.of(context).push<ArtTemplate>(
-      MaterialPageRoute(builder: (_) => const TemplateGallery()),
+  /// Toggles the right-side templates panel (replaces the old
+  /// full-screen gallery navigation).
+  void _toggleTemplatesPanel() {
+    setState(() => _templatesPanelOpen = !_templatesPanelOpen);
+  }
+
+  /// Stamps [template] merged onto the current frame, centered on
+  /// ([cx], [cy]) in canvas pixel coordinates. Clips at canvas edges.
+  void _stampTemplateAt(ArtTemplate template, int cx, int cy) {
+    final stamp = template.toFrame();
+    final ox = cx - stamp.width ~/ 2;
+    final oy = cy - stamp.height ~/ 2;
+    for (var y = 0; y < stamp.height; y++) {
+      for (var x = 0; x < stamp.width; x++) {
+        final color = stamp.getPixel(x, y);
+        if (color == null) continue;
+        _frame.setPixel(ox + x, oy + y, color);
+      }
+    }
+  }
+
+  /// Stamps a template dropped from the panel onto the canvas.
+  void _onTemplateDropped(ArtTemplate template, Offset globalOffset) {
+    final renderObject =
+        _canvasKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox) return;
+    final point = PixelCanvas.dropToPixel(
+      canvasBox: renderObject,
+      globalOffset: globalOffset,
+      frame: _frame,
     );
-    if (template == null) return;
-    final frame = template.toFrame();
+    if (point == null) return;
+    _pushUndo();
     setState(() {
-      _canvasSize = frame.width;
-      _frames = [frame];
-      _activeFrame = 0;
-      _undoStack.clear();
-      _exitStampMode();
+      _stampTemplateAt(template, point.x, point.y);
     });
+  }
+
+  /// Tapping a panel card stamps the template centered on the canvas.
+  void _onPanelTemplateTapped(ArtTemplate template) {
+    _pushUndo();
+    setState(() {
+      _stampTemplateAt(
+          template, _frame.width ~/ 2, _frame.height ~/ 2);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Stamped "${template.name}" — draw over it!'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _openGuidedBuilder() async {
@@ -227,12 +293,12 @@ class _EditorScreenState extends State<EditorScreen> {
               ListTile(
                 leading: const Icon(Icons.grid_view,
                     color: MutapixelTheme.primary),
-                title: const Text('Template gallery'),
+                title: const Text('Template panel'),
                 subtitle:
-                    const Text('Heroes, monsters, animals, items and more'),
+                    const Text('Drag templates onto your canvas'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  _openTemplateGallery();
+                  setState(() => _templatesPanelOpen = true);
                 },
               ),
               const Divider(),
@@ -406,12 +472,20 @@ class _EditorScreenState extends State<EditorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'Home',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: const Text('Mutapixel'),
         actions: [
           IconButton(
             tooltip: 'Templates',
             icon: const Icon(Icons.grid_view),
-            onPressed: _openTemplateGallery,
+            color: _templatesPanelOpen
+                ? MutapixelTheme.primary
+                : null,
+            onPressed: _toggleTemplatesPanel,
           ),
           IconButton(
             tooltip: 'Parts',
@@ -510,21 +584,61 @@ class _EditorScreenState extends State<EditorScreen> {
                 ],
               ),
             ),
-          // Canvas in a premium white card.
+          // Canvas area: tinted backdrop so the bordered canvas card pops.
           Expanded(
             child: Container(
               margin: const EdgeInsets.all(12),
-              padding: const EdgeInsets.all(12),
-              decoration: MutapixelTheme.cardDecoration(context),
-              child: PixelCanvas(
-                frame: _frame,
-                drawColor: _drawColor,
-                tool: _tool,
-                mirror: _mirror,
-                showGrid: _showGrid,
-                stampFrame: _stampPart,
-                onStrokeStart: _pushUndo,
-                onChanged: () => setState(() {}),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _canvasTint(context),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: DragTarget<ArtTemplate>(
+                onWillAcceptWithDetails: (_) => true,
+                onAcceptWithDetails: (details) =>
+                    _onTemplateDropped(
+                        details.data, details.offset),
+                builder: (context, candidate, rejected) {
+                  final dragging = candidate.isNotEmpty;
+                  final dark = Theme.of(context).brightness ==
+                      Brightness.dark;
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color:
+                          MutapixelTheme.of(context).surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: dragging
+                            ? MutapixelTheme.primary
+                            : (dark
+                                ? const Color(0x24FFFFFF)
+                                : const Color(0xFFD8D8E0)),
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: dark
+                              ? const Color(0x40000000)
+                              : const Color(0x14000000),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: PixelCanvas(
+                      key: _canvasKey,
+                      frame: _frame,
+                      drawColor: _drawColor,
+                      tool: _tool,
+                      mirror: _mirror,
+                      showGrid: _showGrid,
+                      stampFrame: _stampPart,
+                      onStrokeStart: _pushUndo,
+                      onChanged: () => setState(() {}),
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -601,16 +715,23 @@ class _EditorScreenState extends State<EditorScreen> {
               children: [
                 Row(
                   children: [
-                    PopupMenuButton<SpritePalette>(
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: PopupMenuButton<SpritePalette>(
                       tooltip: 'Choose palette',
                       child: Row(
                         children: [
-                          Text(
-                            _palette.name,
-                            style: TextStyle(
-                              color: MutapixelTheme.of(context).secondaryText,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                          Flexible(
+                            child: Text(
+                              _palette.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: MutapixelTheme.of(context).secondaryText,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                           Icon(Icons.arrow_drop_down,
@@ -627,7 +748,8 @@ class _EditorScreenState extends State<EditorScreen> {
                           PopupMenuItem(value: p, child: Text(p.name)),
                       ],
                     ),
-                    const Spacer(),
+                      ),
+                    ),
                     TextButton.icon(
                       icon: const Icon(Icons.colorize, size: 18),
                       label: const Text('Custom'),
@@ -680,7 +802,93 @@ class _EditorScreenState extends State<EditorScreen> {
               ],
             ),
           ),
+          _templatesPanel(),
         ],
+      ),
+    );
+  }
+
+  /// Tint behind the canvas card so the bordered card pops.
+  /// Light: #EDEDF2, dark: #0F0F12.
+  Color _canvasTint(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF0F0F12)
+          : const Color(0xFFEDEDF2);
+
+  /// Collapsible right-side templates panel (Canva style).
+  ///
+  /// Expanded: search + category chips + draggable template cards.
+  /// Collapsed: a slim strip showing only the expand toggle.
+  Widget _templatesPanel() {
+    final palette = MutapixelTheme.of(context);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+      width: _templatesPanelOpen ? 280 : 52,
+      margin: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: palette.hairline),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 16,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: _templatesPanelOpen ? 12 : 6,
+                  vertical: 5),
+              child: Tooltip(
+                message: _templatesPanelOpen
+                    ? 'Hide templates'
+                    : 'Show templates',
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: _toggleTemplatesPanel,
+                    child: Container(
+                      width:
+                          _templatesPanelOpen ? 52 : 40,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: _templatesPanelOpen
+                            ? MutapixelTheme.primary
+                                .withValues(alpha: 0.12)
+                            : Colors.transparent,
+                        borderRadius:
+                            BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        _templatesPanelOpen
+                            ? Icons.chevron_right
+                            : Icons.chevron_left,
+                        size: 20,
+                        color: _templatesPanelOpen
+                            ? MutapixelTheme.primary
+                            : palette.ink,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (_templatesPanelOpen)
+              Expanded(
+                child: TemplatesPanel(
+                  onTapTemplate: _onPanelTemplateTapped,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
