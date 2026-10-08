@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mutapixel/data/palette_presets.dart';
 import 'package:mutapixel/data/starter_templates.dart';
+import 'package:mutapixel/data/template_library.dart';
 
 void main() {
   group('PalettePresets', () {
@@ -45,6 +46,41 @@ void main() {
             );
           }
         }
+      }
+    });
+  });
+
+  group('TemplateLibrary', () {
+    test('has 141 templates across 8 categories', () {
+      expect(TemplateLibrary.all.length, 141);
+      expect(TemplateLibrary.categories.length, 8);
+      for (final c in TemplateLibrary.categories) {
+        expect(TemplateLibrary.byCategory(c), isNotEmpty,
+            reason: 'category "$c" should not be empty');
+      }
+    });
+
+    test('all templates are valid 16x16 with mapped colors', () {
+      final names = <String>{};
+      for (final template in TemplateLibrary.all) {
+        expect(template.name, isNotEmpty);
+        expect(names.add(template.name), isTrue,
+            reason: 'duplicate template name "${template.name}"');
+        expect(template.rows.length, 16);
+        for (final row in template.rows) {
+          expect(row.length, 16);
+          for (var i = 0; i < row.length; i++) {
+            final ch = row[i];
+            expect(
+              ch == '.' || template.colors.containsKey(ch),
+              isTrue,
+              reason: 'unmapped char "$ch" in ${template.name}',
+            );
+          }
+        }
+        final frame = template.toFrame();
+        expect(frame.isEmpty, isFalse,
+            reason: '${template.name} should not be blank');
       }
     });
   });
