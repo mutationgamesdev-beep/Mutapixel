@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../models/sprite_frame.dart';
+import 'templates_extra.dart';
+import 'templates_faces.dart';
+import 'templates_food.dart';
+import 'templates_nature.dart';
+import 'templates_space.dart';
 
 /// A hand-designed sprite template, defined as text rows where each
 /// character maps to a color ('.' is always transparent).
@@ -520,6 +525,11 @@ class TemplateLibrary {
     potion,
     gem,
     axe,
+    ...FoodTemplates.all,
+    ...NatureTemplates.all,
+    ...SpaceTemplates.all,
+    ...FacesTemplates.all,
+    ...ExtraTemplates.all,
   ];
 
   static List<ArtTemplate> byCategory(String c) =>
@@ -530,5 +540,9 @@ class TemplateLibrary {
     'monsters',
     'animals',
     'items',
+    'food',
+    'nature',
+    'space',
+    'faces',
   ];
 }
