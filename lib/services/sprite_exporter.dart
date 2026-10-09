@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 
+import 'package:archive/archive.dart';
 import 'package:image/image.dart' as img;
 
+import '../models/art_layer.dart';
 import '../models/sprite_frame.dart';
 
 /// Turns sprite frames into PNG bytes.
@@ -92,5 +94,30 @@ class SpriteExporter {
       }
     }
     return Uint8List.fromList(img.encodePng(sheet));
+  }
+
+  /// Packs every VISIBLE layer into a ZIP: one PNG per layer
+  /// (`01_background.png`, `02_eyes.png`, ... in bottom-to-top
+  /// order) plus `complete.png` (the flattened composite).
+  /// Hidden layers are skipped; empty ZIPs can't happen because
+  /// callers only offer this when more than one layer exists.
+  static Uint8List encodeLayersZip(
+    List<ArtLayer> layers, {
+    int scale = 1,
+  }) {
+    assert(layers.isNotEmpty, 'need at least one layer');
+    assert(scale >= 1, 'scale must be at least 1');
+    final archive = Archive();
+    final visible = layers.where((l) => l.visible).toList();
+    for (var i = 0; i < visible.length; i++) {
+      final name =
+          '${(i + 1).toString().padLeft(2, '0')}_${ArtLayer.sanitizeName(visible[i].name)}.png';
+      final png = encodeFrame(visible[i].frame, scale: scale);
+      archive.addFile(ArchiveFile(name, png.length, png));
+    }
+    final complete = encodeFrame(ArtLayer.flatten(layers), scale: scale);
+    archive.addFile(
+        ArchiveFile('complete.png', complete.length, complete));
+    return Uint8List.fromList(ZipEncoder().encode(archive));
   }
 }
