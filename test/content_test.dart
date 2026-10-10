@@ -51,24 +51,24 @@ void main() {
   });
 
   group('TemplateLibrary', () {
-    test('has 171 templates across 9 categories', () {
-      expect(TemplateLibrary.all.length, 171);
-      expect(TemplateLibrary.categories.length, 9);
+    test('has 671 templates across 10 categories', () {
+      expect(TemplateLibrary.all.length, 671);
+      expect(TemplateLibrary.categories.length, 10);
       for (final c in TemplateLibrary.categories) {
         expect(TemplateLibrary.byCategory(c), isNotEmpty,
             reason: 'category "$c" should not be empty');
       }
     });
 
-    test('all templates are valid 16x16 or 32x32 with mapped colors', () {
+    test('all templates are valid 16x16, 32x32 or 64x64 with mapped colors', () {
       final names = <String>{};
       for (final template in TemplateLibrary.all) {
         expect(template.name, isNotEmpty);
         expect(names.add(template.name), isTrue,
             reason: 'duplicate template name "${template.name}"');
         final size = template.rows.length;
-        expect(size == 16 || size == 32, isTrue,
-            reason: '${template.name} should be 16x16 or 32x32');
+        expect(size == 16 || size == 32 || size == 64, isTrue,
+            reason: '${template.name} should be 16, 32 or 64px');
         for (final row in template.rows) {
           expect(row.length, size);
           for (var i = 0; i < row.length; i++) {
@@ -86,12 +86,21 @@ void main() {
       }
     });
 
-    test('detailed category has 30 native 32x32 templates', () {
+    test('detailed category has 280 native 32x32 templates', () {
       final detailed = TemplateLibrary.byCategory('detailed');
-      expect(detailed.length, 30);
+      expect(detailed.length, 280);
       for (final t in detailed) {
         expect(t.rows.length, 32);
         expect(t.toFrame().width, 32);
+      }
+    });
+
+    test('ultra category has 250 native 64x64 templates', () {
+      final ultra = TemplateLibrary.byCategory('ultra');
+      expect(ultra.length, 250);
+      for (final t in ultra) {
+        expect(t.rows.length, 64);
+        expect(t.toFrame().width, 64);
       }
     });
   });
