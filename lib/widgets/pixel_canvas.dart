@@ -139,14 +139,17 @@ class PixelCanvasState extends State<PixelCanvas> {
 
     switch (widget.tool) {
       case CanvasTool.pencil:
-        frame.setPixel(px, py, widget.drawColor);
+        widget.layers[widget.activeLayer]
+            .setPixelAt(px, py, widget.drawColor);
         if (widget.mirror) {
-          frame.setPixel(frame.width - 1 - px, py, widget.drawColor);
+          widget.layers[widget.activeLayer].setPixelAt(
+              frame.width - 1 - px, py, widget.drawColor);
         }
       case CanvasTool.eraser:
-        frame.setPixel(px, py, null);
+        widget.layers[widget.activeLayer].setPixelAt(px, py, null);
         if (widget.mirror) {
-          frame.setPixel(frame.width - 1 - px, py, null);
+          widget.layers[widget.activeLayer]
+              .setPixelAt(frame.width - 1 - px, py, null);
         }
       case CanvasTool.fill:
       case CanvasTool.stamp:
@@ -174,7 +177,7 @@ class PixelCanvasState extends State<PixelCanvas> {
     for (var i = widget.layers.length - 1; i >= 0; i--) {
       final layer = widget.layers[i];
       if (!layer.visible) continue;
-      final color = layer.frame.getPixel(px, py);
+      final color = layer.getPixelAt(px, py);
       if (color != null) {
         widget.onColorPicked?.call(color);
         return;
@@ -184,11 +187,15 @@ class PixelCanvasState extends State<PixelCanvas> {
   }
 
   void _fillAt(Offset local, Size paintSize) {
-    final frame = _frame;
+    final layer = widget.layers[widget.activeLayer];
+    final frame = layer.frame;
     final g = PixelCanvas.canvasGeometry(paintSize, frame);
 
-    final sx = ((local.dx - g.origin.dx) / g.pixelSize).floor();
-    final sy = ((local.dy - g.origin.dy) / g.pixelSize).floor();
+    final cx = ((local.dx - g.origin.dx) / g.pixelSize).floor();
+    final cy = ((local.dy - g.origin.dy) / g.pixelSize).floor();
+    // Translate canvas coords to layer-local coords.
+    final sx = cx - layer.offsetX;
+    final sy = cy - layer.offsetY;
     if (sx < 0 || sy < 0 || sx >= frame.width || sy >= frame.height) {
       return;
     }
@@ -198,7 +205,7 @@ class PixelCanvasState extends State<PixelCanvas> {
         widget.tool == CanvasTool.eraser ? null : widget.drawColor;
     if (_sameColor(target, replacement)) return;
 
-    // Flood fill.
+    // Flood fill in layer-local coords.
     final stack = <ui.Offset>[ui.Offset(sx.toDouble(), sy.toDouble())];
     while (stack.isNotEmpty) {
       final p = stack.removeLast();
@@ -332,18 +339,22 @@ class PixelCanvasState extends State<PixelCanvas> {
     final sel = _selection;
     if (sel == null) return;
     widget.onStrokeStart();
-    final frame = _frame;
+    final layer = widget.layers[widget.activeLayer];
+    final frame = layer.frame;
+    // Selection is in canvas coords; translate to layer-local.
+    final lx = sel.left - layer.offsetX;
+    final ly = sel.top - layer.offsetY;
     final w = sel.width, h = sel.height;
     final pixels = List.generate(
       h,
       (y) => List<Color?>.generate(
         w,
-        (x) => frame.getPixel(sel.left + x, sel.top + y),
+        (x) => frame.getPixel(lx + x, ly + y),
       ),
     );
     for (var y = 0; y < h; y++) {
       for (var x = 0; x < w; x++) {
-        frame.setPixel(sel.left + x, sel.top + y, null);
+        frame.setPixel(lx + x, ly + y, null);
       }
     }
     _floatPixels = pixels;
@@ -357,12 +368,15 @@ class PixelCanvasState extends State<PixelCanvas> {
     final pixels = _floatPixels;
     final pos = _floatPos;
     if (pixels == null || pos == null) return;
-    final frame = _frame;
+    final layer = widget.layers[widget.activeLayer];
+    final frame = layer.frame;
     for (var y = 0; y < pixels.length; y++) {
       for (var x = 0; x < pixels[y].length; x++) {
         final c = pixels[y][x];
         if (c == null) continue;
-        final dx = pos.x + x, dy = pos.y + y;
+        // Floating pos is canvas coords; translate to layer-local.
+        final dx = pos.x + x - layer.offsetX;
+        final dy = pos.y + y - layer.offsetY;
         if (dx < 0 ||
             dy < 0 ||
             dx >= frame.width ||
@@ -399,10 +413,13 @@ class PixelCanvasState extends State<PixelCanvas> {
     } else {
       final sel = _selection;
       if (sel != null) {
-        final frame = _frame;
+        final layer = widget.layers[widget.activeLayer];
+        final frame = layer.frame;
+        final lx = sel.left - layer.offsetX;
+        final ly = sel.top - layer.offsetY;
         for (var y = 0; y < sel.height; y++) {
           for (var x = 0; x < sel.width; x++) {
-            frame.setPixel(sel.left + x, sel.top + y, null);
+            frame.setPixel(lx + x, ly + y, null);
           }
         }
       }
@@ -425,12 +442,15 @@ class PixelCanvasState extends State<PixelCanvas> {
     } else {
       final sel = _selection;
       if (sel == null) return;
-      final frame = _frame;
+      final layer = widget.layers[widget.activeLayer];
+      final frame = layer.frame;
+      final lx = sel.left - layer.offsetX;
+      final ly = sel.top - layer.offsetY;
       for (var y = 0; y < sel.height; y++) {
         for (var x = 0; x < sel.width ~/ 2; x++) {
-          final ax = sel.left + x;
-          final bx = sel.left + sel.width - 1 - x;
-          final yy = sel.top + y;
+          final ax = lx + x;
+          final bx = lx + sel.width - 1 - x;
+          final yy = ly + y;
           final tmp = frame.getPixel(ax, yy);
           frame.setPixel(ax, yy, frame.getPixel(bx, yy));
           frame.setPixel(bx, yy, tmp);
@@ -453,12 +473,15 @@ class PixelCanvasState extends State<PixelCanvas> {
     } else {
       final sel = _selection;
       if (sel == null) return;
-      final frame = _frame;
+      final layer = widget.layers[widget.activeLayer];
+      final frame = layer.frame;
+      final lx = sel.left - layer.offsetX;
+      final ly = sel.top - layer.offsetY;
       for (var x = 0; x < sel.width; x++) {
         for (var y = 0; y < sel.height ~/ 2; y++) {
-          final ay = sel.top + y;
-          final by = sel.top + sel.height - 1 - y;
-          final xx = sel.left + x;
+          final ay = ly + y;
+          final by = ly + sel.height - 1 - y;
+          final xx = lx + x;
           final tmp = frame.getPixel(xx, ay);
           frame.setPixel(xx, ay, frame.getPixel(xx, by));
           frame.setPixel(xx, by, tmp);
@@ -475,13 +498,16 @@ class PixelCanvasState extends State<PixelCanvas> {
     final sel = _selection;
     if (sel == null) return;
     widget.onStrokeStart();
-    final frame = _frame;
+    final layer = widget.layers[widget.activeLayer];
+    final frame = layer.frame;
+    final lx = sel.left - layer.offsetX;
+    final ly = sel.top - layer.offsetY;
     final w = sel.width, h = sel.height;
     _floatPixels = List.generate(
       h,
       (y) => List<Color?>.generate(
         w,
-        (x) => frame.getPixel(sel.left + x, sel.top + y),
+        (x) => frame.getPixel(lx + x, ly + y),
       ),
     );
     _floatPos = math.Point(sel.left, sel.top);
@@ -637,7 +663,8 @@ class _CanvasPainter extends CustomPainter {
       }
     }
 
-    // Composite visible layers bottom-to-top (canvas blends them).
+    // Composite visible layers bottom-to-top (canvas blends them),
+    // each at its own offset.
     for (final layer in layers) {
       if (!layer.visible) continue;
       final lf = layer.frame;
@@ -646,7 +673,8 @@ class _CanvasPainter extends CustomPainter {
           final color = lf.getPixel(x, y);
           if (color == null) continue;
           canvas.drawRect(
-            Rect.fromLTWH(ox + x * ps, oy + y * ps, ps, ps),
+            Rect.fromLTWH(ox + (x + layer.offsetX) * ps,
+                oy + (y + layer.offsetY) * ps, ps, ps),
             Paint()
               ..color = color.withValues(
                   alpha: (color.a * layer.opacity).clamp(0.0, 1.0)),
