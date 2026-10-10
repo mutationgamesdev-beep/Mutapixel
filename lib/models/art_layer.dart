@@ -15,11 +15,20 @@ class ArtLayer {
   bool visible;
   double opacity; // 0.0 - 1.0
 
+  /// Position offset in canvas pixels. The Move tool changes this
+  /// instead of shifting pixels, so moving a layer partially (or
+  /// fully) off-canvas never destroys pixels — moving it back
+  /// restores the full image.
+  int offsetX;
+  int offsetY;
+
   ArtLayer({
     required this.name,
     required this.frame,
     this.visible = true,
     this.opacity = 1.0,
+    this.offsetX = 0,
+    this.offsetY = 0,
   });
 
   /// Deep copy, used for undo snapshots and duplicating layers.
@@ -28,32 +37,32 @@ class ArtLayer {
         frame: SpriteFrame.clone(frame),
         visible: visible,
         opacity: opacity,
+        offsetX: offsetX,
+        offsetY: offsetY,
       );
 
-  /// Shifts every pixel of the layer by ([dx], [dy]). Pixels pushed
-  /// off the canvas are lost; the vacated area stays transparent.
+  /// Moves the layer by ([dx], [dy]) without touching pixels.
+  /// Nothing is ever lost, even off-canvas.
   static void shift(ArtLayer layer, int dx, int dy) {
     if (dx == 0 && dy == 0) return;
-    final frame = layer.frame;
-    final w = frame.width;
-    final h = frame.height;
-    final copy = <List<Color?>>[
-      for (final row in frame.pixels) [...row]
-    ];
-    for (var y = 0; y < h; y++) {
-      for (var x = 0; x < w; x++) {
-        final sx = x - dx;
-        final sy = y - dy;
-        frame.pixels[y][x] =
-            (sx >= 0 && sx < w && sy >= 0 && sy < h)
-                ? copy[sy][sx]
-                : null;
-      }
-    }
+    layer.offsetX += dx;
+    layer.offsetY += dy;
   }
+
+  /// Samples the layer at canvas pixel ([x], [y]), accounting for
+  /// the layer's offset. Returns null when transparent or outside
+  /// the layer's frame.
+  Color? getPixelAt(int x, int y) =>
+      frame.getPixel(x - offsetX, y - offsetY);
+
+  /// Paints onto the layer at canvas pixel ([x], [y]), accounting
+  /// for the layer's offset. Out-of-frame paints are ignored.
+  void setPixelAt(int x, int y, Color? color) =>
+      frame.setPixel(x - offsetX, y - offsetY, color);
 
   /// Flattens the visible layers bottom-to-top into a single frame
   /// using proper src-over alpha compositing (with per-layer opacity).
+  /// Each layer is composited at its [offsetX]/[offsetY].
   static SpriteFrame flatten(List<ArtLayer> layers) {
     assert(layers.isNotEmpty, 'need at least one layer');
     final w = layers.first.frame.width;
@@ -61,12 +70,16 @@ class ArtLayer {
     final out = SpriteFrame(width: w, height: h);
     for (final layer in layers) {
       if (!layer.visible) continue;
-      for (var y = 0; y < h; y++) {
-        for (var x = 0; x < w; x++) {
-          final src = layer.frame.getPixel(x, y);
+      final lf = layer.frame;
+      for (var y = 0; y < lf.height; y++) {
+        for (var x = 0; x < lf.width; x++) {
+          final src = lf.getPixel(x, y);
           if (src == null) continue;
+          final dx = x + layer.offsetX;
+          final dy = y + layer.offsetY;
+          if (dx < 0 || dy < 0 || dx >= w || dy >= h) continue;
           out.setPixel(
-              x, y, _compositeOver(src, layer.opacity, out.getPixel(x, y)));
+              dx, dy, _compositeOver(src, layer.opacity, out.getPixel(dx, dy)));
         }
       }
     }
