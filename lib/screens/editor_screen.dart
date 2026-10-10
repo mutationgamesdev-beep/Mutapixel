@@ -680,15 +680,19 @@ class _EditorScreenState extends State<EditorScreen> {
                       ],
                     ),
                   ),
-                  // Tabs: Templates | Parts | Animations.
+                  // Tabs: Templates | Parts | Animations (vertical).
                   Padding(
                     padding:
                         const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.stretch,
                       children: [
                         _panelTabButton(0, 'Templates', palette),
+                        const SizedBox(height: 6),
                         _panelTabButton(1, 'Parts', palette),
-                        _panelTabButton(2, 'Anims', palette),
+                        const SizedBox(height: 6),
+                        _panelTabButton(2, 'Animations', palette),
                       ],
                     ),
                   ),
@@ -705,37 +709,32 @@ class _EditorScreenState extends State<EditorScreen> {
     );
   }
 
-  /// A tab button for the right library panel.
+  /// A tab button for the right library panel (full-width, vertical).
   Widget _panelTabButton(
       int index, String label, MutapixelPalette palette) {
     final selected = _panelTab == index;
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: InkWell(
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => setState(() => _panelTab = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: selected
+              ? MutapixelTheme.primary
+              : palette.subtleFill,
           borderRadius: BorderRadius.circular(10),
-          onTap: () => setState(() => _panelTab = index),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 7),
-            decoration: BoxDecoration(
-              color: selected
-                  ? MutapixelTheme.primary
-                  : palette.subtleFill,
-              borderRadius: BorderRadius.circular(10),
-              border: selected
-                  ? null
-                  : Border.all(color: palette.hairline),
-            ),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight:
-                    selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? Colors.white : palette.ink,
-              ),
-            ),
+          border: selected
+              ? null
+              : Border.all(color: palette.hairline),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight:
+                selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? Colors.white : palette.ink,
           ),
         ),
       ),
