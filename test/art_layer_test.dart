@@ -32,33 +32,34 @@ void main() {
       expect(layer.opacity, 1.0);
     });
 
-    test('shift moves pixels and clears the source area', () {
+    test('shift moves the offset and never touches pixels', () {
       final frame = SpriteFrame(width: 4, height: 4);
       frame.setPixel(0, 0, const Color(0xFFFF0000));
       final layer = ArtLayer(name: 'A', frame: frame);
 
       ArtLayer.shift(layer, 2, 1);
 
-      expect(layer.frame.getPixel(2, 1), const Color(0xFFFF0000));
-      expect(layer.frame.getPixel(0, 0), isNull);
+      // Pixels stay put in the frame; the offset records the move.
+      expect(layer.frame.getPixel(0, 0), const Color(0xFFFF0000));
+      expect(layer.offsetX, 2);
+      expect(layer.offsetY, 1);
+      // Canvas-space lookup reflects the move.
+      expect(layer.getPixelAt(2, 1), const Color(0xFFFF0000));
+      expect(layer.getPixelAt(0, 0), isNull);
     });
 
-    test('shift pushes pixels off the canvas', () {
+    test('shift off-canvas keeps pixels intact', () {
       final frame = SpriteFrame(width: 4, height: 4);
       frame.setPixel(3, 3, const Color(0xFFFF0000));
       final layer = ArtLayer(name: 'A', frame: frame);
 
       ArtLayer.shift(layer, 1, 0);
 
-      var anyPainted = false;
-      for (var y = 0; y < 4; y++) {
-        for (var x = 0; x < 4; x++) {
-          if (layer.frame.getPixel(x, y) != null) {
-            anyPainted = true;
-          }
-        }
-      }
-      expect(anyPainted, isFalse);
+      // Nothing is lost: the pixel is still in the frame.
+      expect(layer.frame.getPixel(3, 3), const Color(0xFFFF0000));
+      // Moving back restores the full image.
+      ArtLayer.shift(layer, -1, 0);
+      expect(layer.getPixelAt(3, 3), const Color(0xFFFF0000));
     });
 
     test('shift with zero delta does nothing', () {
@@ -119,6 +120,17 @@ void main() {
       final flat = ArtLayer.flatten(layers);
       expect(flat.getPixel(0, 0), isNotNull);
       expect(flat.getPixel(1, 1), isNull);
+    });
+
+    test('flatten respects layer offset', () {
+      final frame = SpriteFrame(width: 2, height: 2);
+      frame.setPixel(0, 0, const Color(0xFFFF0000));
+      final layers = [
+        ArtLayer(name: 'moved', frame: frame, offsetX: 1, offsetY: 0),
+      ];
+      final flat = ArtLayer.flatten(layers);
+      expect(flat.getPixel(1, 0), const Color(0xFFFF0000));
+      expect(flat.getPixel(0, 0), isNull);
     });
 
     test('sanitizeName makes filenames safe', () {
