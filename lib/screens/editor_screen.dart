@@ -6,9 +6,11 @@ import '../models/art_layer.dart';
 import '../models/sprite_frame.dart';
 import '../data/sprite_parts.dart';
 import '../data/template_library.dart';
+import '../data/animation_library.dart';
 import '../theme/mutapixel_theme.dart';
 import '../widgets/pixel_canvas.dart';
 import '../widgets/template_preview.dart';
+import 'animation_screen.dart';
 import 'effects_sheet.dart';
 import 'export_sheet.dart';
 import 'layers_sheet.dart';
@@ -77,7 +79,16 @@ class _EditorScreenState extends State<EditorScreen> {
 
   SpritePart? _stampPart;
 
+  /// Right panel tab: 0 = Templates, 1 = Parts, 2 = Animations.
+  int _panelTab = 0;
+
   final GlobalKey _canvasKey = GlobalKey();
+  final GlobalKey<PixelCanvasState> _selectionKey =
+      GlobalKey<PixelCanvasState>();
+
+  /// Whether the selection tool has an active selection (drives the
+  /// options popup).
+  bool _hasSelection = false;
 
   final List<Color> _defaultPalette = const [
     Colors.transparent,
@@ -580,6 +591,8 @@ class _EditorScreenState extends State<EditorScreen> {
                 Icons.colorize, 'Eyedropper'),
             _sideRailToolButton(
                 CanvasTool.move, Icons.open_with, 'Move'),
+            _sideRailToolButton(
+                CanvasTool.select, Icons.select_all, 'Select'),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Container(
@@ -646,7 +659,7 @@ class _EditorScreenState extends State<EditorScreen> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text('Templates',
+                          child: Text('Library',
                               style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -667,100 +680,380 @@ class _EditorScreenState extends State<EditorScreen> {
                       ],
                     ),
                   ),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(
-                          8, 4, 8, 12),
-                      itemCount: TemplateLibrary.all.length,
-                      itemBuilder: (context, i) {
-                        final template =
-                            TemplateLibrary.all[i];
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                              bottom: 10),
-                          child: LongPressDraggable<
-                              ArtTemplate>(
-                            data: template,
-                            feedback: Material(
-                              elevation: 6,
-                              borderRadius:
-                                  BorderRadius.circular(
-                                      10),
-                              child: Container(
-                                width: 64,
-                                height: 64,
-                                padding:
-                                    const EdgeInsets.all(
-                                        6),
-                                decoration: BoxDecoration(
-                                  color: palette.surface,
-                                  borderRadius:
-                                      BorderRadius.circular(
-                                          10),
-                                ),
-                                child: CustomPaint(
-                                  painter:
-                                      TemplatePreview(
-                                          frame: template
-                                              .toFrame()),
-                                ),
-                              ),
-                            ),
-                            child: InkWell(
-                              borderRadius:
-                                  BorderRadius.circular(
-                                      12),
-                              onTap: () =>
-                                  _onPanelTemplateTapped(
-                                      template),
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.all(
-                                        6),
-                                decoration: BoxDecoration(
-                                  color:
-                                      palette.subtleFill,
-                                  borderRadius:
-                                      BorderRadius.circular(
-                                          12),
-                                  border: Border.all(
-                                      color:
-                                          palette.hairline),
-                                ),
-                                child: Column(
-                                  children: [
-                                    AspectRatio(
-                                      aspectRatio: 1,
-                                      child: CustomPaint(
-                                        painter:
-                                            TemplatePreview(
-                                                frame: template
-                                                    .toFrame()),
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                        height: 4),
-                                    Text(
-                                      template.name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow
-                                          .ellipsis,
-                                      style:
-                                          const TextStyle(
-                                              fontSize: 10),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                  // Tabs: Templates | Parts | Animations.
+                  Padding(
+                    padding:
+                        const EdgeInsets.fromLTRB(8, 4, 8, 8),
+                    child: Row(
+                      children: [
+                        _panelTabButton(0, 'Templates', palette),
+                        _panelTabButton(1, 'Parts', palette),
+                        _panelTabButton(2, 'Anims', palette),
+                      ],
                     ),
+                  ),
+                  Expanded(
+                    child: _panelTab == 0
+                        ? _buildPanelTemplates(palette)
+                        : _panelTab == 1
+                            ? _buildPanelParts(palette)
+                            : _buildPanelAnimations(palette),
                   ),
                 ],
               ),
             ),
+    );
+  }
+
+  /// A tab button for the right library panel.
+  Widget _panelTabButton(
+      int index, String label, MutapixelPalette palette) {
+    final selected = _panelTab == index;
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => setState(() => _panelTab = index),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            decoration: BoxDecoration(
+              color: selected
+                  ? MutapixelTheme.primary
+                  : palette.subtleFill,
+              borderRadius: BorderRadius.circular(10),
+              border: selected
+                  ? null
+                  : Border.all(color: palette.hairline),
+            ),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight:
+                    selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? Colors.white : palette.ink,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Templates tab content (art templates, as before).
+  Widget _buildPanelTemplates(MutapixelPalette palette) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+      itemCount: TemplateLibrary.all.length,
+      itemBuilder: (context, i) {
+        final template = TemplateLibrary.all[i];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: LongPressDraggable<ArtTemplate>(
+            data: template,
+            feedback: Material(
+              elevation: 6,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: 64,
+                height: 64,
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: palette.surface,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: CustomPaint(
+                  painter:
+                      TemplatePreview(frame: template.toFrame()),
+                ),
+              ),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => _onPanelTemplateTapped(template),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: palette.subtleFill,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: palette.hairline),
+                ),
+                child: Column(
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: CustomPaint(
+                        painter: TemplatePreview(
+                            frame: template.toFrame()),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      template.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Parts tab content: tap a part to enter stamp mode.
+  Widget _buildPanelParts(MutapixelPalette palette) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+      itemCount: SpriteParts.all.length,
+      itemBuilder: (context, i) {
+        final part = SpriteParts.all[i];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              setState(() {
+                _stampPart = part;
+                _tool = CanvasTool.stamp;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text(
+                        'Stamp mode: tap the canvas to place "${part.name}".')),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: _stampPart == part
+                    ? MutapixelTheme.primary.withValues(alpha: 0.12)
+                    : palette.subtleFill,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _stampPart == part
+                      ? MutapixelTheme.primary
+                      : palette.hairline,
+                ),
+              ),
+              child: Column(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: CustomPaint(
+                      painter:
+                          TemplatePreview(frame: part.toFrame()),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    part.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Animations tab content: tap to open in Animation Studio.
+  Widget _buildPanelAnimations(MutapixelPalette palette) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+      itemCount: AnimationLibrary.all.length,
+      itemBuilder: (context, i) {
+        final anim = AnimationLibrary.all[i];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AnimationScreen(
+                    initialFrames: anim.frames,
+                    initialFps: anim.fps,
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: palette.subtleFill,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: palette.hairline),
+              ),
+              child: Column(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1,
+                    child: Stack(
+                      children: [
+                        CustomPaint(
+                          painter: TemplatePreview(
+                              frame: anim.frames.first),
+                        ),
+                        Positioned(
+                          right: 2,
+                          bottom: 2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.black
+                                  .withValues(alpha: 0.65),
+                              borderRadius:
+                                  BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              '${anim.frames.length}f',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    anim.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Floating options popup shown when the Select tool has an
+  /// active selection. Offers move (drag), delete, flip, duplicate,
+  /// and done actions.
+  Widget _buildSelectionPopup() {
+    final palette = MutapixelTheme.of(context);
+    final canvas = _selectionKey.currentState;
+    return Positioned(
+      left: 12,
+      right: 12,
+      bottom: 12,
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(20),
+        color: palette.surface,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: palette.hairline),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  'Selection — drag to move',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: palette.secondaryText,
+                  ),
+                ),
+              ),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _selectionAction(
+                      Icons.delete_outline,
+                      'Delete',
+                      () => canvas?.deleteSelection(),
+                    ),
+                    _selectionAction(
+                      Icons.flip,
+                      'Flip H',
+                      () => canvas?.flipSelectionH(),
+                    ),
+                    _selectionAction(
+                      Icons.flip_camera_android,
+                      'Flip V',
+                      () => canvas?.flipSelectionV(),
+                    ),
+                    _selectionAction(
+                      Icons.copy,
+                      'Duplicate',
+                      () => canvas?.duplicateSelection(),
+                    ),
+                    _selectionAction(
+                      Icons.check,
+                      'Done',
+                      () {
+                        canvas?.doneSelection();
+                        canvas?.clearSelection();
+                        setState(() =>
+                            _tool = CanvasTool.pencil);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _selectionAction(
+      IconData icon, String label, VoidCallback onTap) {
+    final palette = MutapixelTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 10, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon,
+                  size: 22, color: MutapixelTheme.primary),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: palette.ink,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1043,7 +1336,10 @@ class _EditorScreenState extends State<EditorScreen> {
                               borderRadius:
                                   BorderRadius.circular(
                                       19),
-                              child: PixelCanvas(
+                              child: Stack(
+                                children: [
+                                  PixelCanvas(
+                                    key: _selectionKey,
                                 layers: _layers,
                                 activeLayer: _activeLayer,
                                 drawColor: _drawColor,
@@ -1053,6 +1349,9 @@ class _EditorScreenState extends State<EditorScreen> {
                                 onStrokeStart: _pushUndo,
                                 onChanged: () =>
                                     setState(() {}),
+                                onSelectionChanged: (has) =>
+                                    setState(() =>
+                                        _hasSelection = has),
                                 onStampTap: (cx, cy) {
                                   final part =
                                       _stampPart;
@@ -1079,6 +1378,10 @@ class _EditorScreenState extends State<EditorScreen> {
                                             'Color picked')),
                                   );
                                 },
+                              ),
+                                  if (_hasSelection)
+                                    _buildSelectionPopup(),
+                                ],
                               ),
                             ),
                           );
