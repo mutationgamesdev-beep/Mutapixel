@@ -473,6 +473,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Small badge showing a template's pixel dimensions,
+  /// placed top-right on thumbnails.
+  Widget _sizeBadge(String label, MutapixelPalette palette) {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
   Widget _templateGrid() {
     final templates = _visible;
     final palette = MutapixelTheme.of(context);
@@ -502,6 +523,7 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: templates.length,
       itemBuilder: (context, i) {
         final t = templates[i];
+        final frame = t.toFrame();
         return GestureDetector(
           onTap: () => _openEditorTemplate(t),
           child: Container(
@@ -513,10 +535,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(10),
-                    child: CustomPaint(
-                      painter:
-                          TemplatePreview(frame: t.toFrame()),
-                      child: const SizedBox.expand(),
+                    child: Stack(
+                      children: [
+                        CustomPaint(
+                          painter:
+                              TemplatePreview(frame: frame),
+                          child: const SizedBox.expand(),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: _sizeBadge(
+                              '${frame.width}×${frame.height}', palette),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -574,6 +606,7 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: templates.length,
       itemBuilder: (context, i) {
         final t = templates[i];
+        final first = t.frames.first;
         return GestureDetector(
           onTap: () => _openAnimationTemplate(t),
           child: Container(
@@ -589,8 +622,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         CustomPaint(
                           painter: TemplatePreview(
-                              frame: t.frames.first),
+                              frame: first),
                           child: const SizedBox.expand(),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: _sizeBadge(
+                              '${first.width}×${first.height}',
+                              palette),
                         ),
                         Positioned(
                           right: 0,
