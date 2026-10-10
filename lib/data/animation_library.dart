@@ -1,5 +1,6 @@
 import '../models/animation_template.dart';
 import 'anim_attacks.dart';
+import 'anim_detailed.dart';
 import 'anim_effects_a.dart';
 import 'anim_effects_b.dart';
 import 'anim_effects_c.dart';
@@ -12,6 +13,7 @@ import 'anim_idles_d.dart';
 import 'anim_jumps.dart';
 import 'anim_misc.dart';
 import 'anim_runs.dart';
+import 'anim_ultra.dart';
 import 'anim_walks_a.dart';
 import 'anim_walks_b.dart';
 import 'anim_walks_c.dart';
@@ -39,6 +41,8 @@ class AnimationLibrary {
     ...effectAnimations_d,
     ...emoteAnimations,
     ...miscAnimations,
+    ...detailedAnimTemplates,
+    ...ultraAnimTemplates,
   ];
 
   static const List<String> categories = [
@@ -50,6 +54,8 @@ class AnimationLibrary {
     'effects',
     'emotes',
     'misc',
+    'detailed',
+    'ultra',
   ];
 
   static String categoryLabel(String category) {
@@ -70,6 +76,10 @@ class AnimationLibrary {
         return 'Emotes';
       case 'misc':
         return 'Spins & Misc';
+      case 'detailed':
+        return 'Detailed 32×32';
+      case 'ultra':
+        return 'Ultra 64×64';
       default:
         return category;
     }
