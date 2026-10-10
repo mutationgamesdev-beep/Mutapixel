@@ -8,6 +8,7 @@ import '../data/sprite_parts.dart';
 import '../data/template_library.dart';
 import '../data/animation_library.dart';
 import '../theme/mutapixel_theme.dart';
+import '../widgets/photoshop_color_picker.dart';
 import '../widgets/pixel_canvas.dart';
 import '../widgets/template_preview.dart';
 import 'animation_screen.dart';
@@ -435,73 +436,18 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   // ---------- UI ----------
-  void _pickCustomColor() {
-    Color temp = _drawColor;
-    final palette = MutapixelTheme.of(context);
-    showDialog<void>(
+  void _pickCustomColor() async {
+    final picked = await showPhotoshopColorPicker(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: palette.surface,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
-        title: const Text('Custom color'),
-        content: StatefulBuilder(
-          builder: (context, setDialogState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 56,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: temp,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: palette.hairline),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _sliderRow('R', temp.r, palette,
-                  (v) => setDialogState(() => temp = temp.withValues(red: v))),
-              _sliderRow('G', temp.g, palette,
-                  (v) => setDialogState(() => temp = temp.withValues(green: v))),
-              _sliderRow('B', temp.b, palette,
-                  (v) => setDialogState(() => temp = temp.withValues(blue: v))),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () {
-              setState(() {
-                _drawColor = temp;
-                if (!_customColors.any((c) => c.toARGB32() == temp.toARGB32())) {
-                  _customColors.add(temp);
-                }
-              });
-              Navigator.of(context).pop();
-            },
-            child: const Text('Use color'),
-          ),
-        ],
-      ),
+      initialColor: _drawColor,
     );
-  }
-
-  Widget _sliderRow(String label, double value, MutapixelPalette palette,
-      ValueChanged<double> onChanged) {
-    return Row(
-      children: [
-        SizedBox(
-            width: 16,
-            child: Text(label,
-                style: TextStyle(color: palette.secondaryText))),
-        Expanded(
-            child: Slider(
-                value: value, min: 0, max: 1, onChanged: onChanged)),
-      ],
-    );
+    if (picked == null) return;
+    setState(() {
+      _drawColor = picked;
+      if (!_customColors.any((c) => c.toARGB32() == picked.toARGB32())) {
+        _customColors.add(picked);
+      }
+    });
   }
 
   Widget _sideRailToolButton(
@@ -741,6 +687,26 @@ class _EditorScreenState extends State<EditorScreen> {
     );
   }
 
+  /// Small badge showing pixel dimensions, top-right on thumbnails.
+  Widget _sizeBadge(String label) {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
   /// Templates tab content (art templates, as before).
   Widget _buildPanelTemplates(MutapixelPalette palette) {
     return ListView.builder(
@@ -748,6 +714,7 @@ class _EditorScreenState extends State<EditorScreen> {
       itemCount: TemplateLibrary.all.length,
       itemBuilder: (context, i) {
         final template = TemplateLibrary.all[i];
+        final frame = template.toFrame();
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: LongPressDraggable<ArtTemplate>(
@@ -765,7 +732,7 @@ class _EditorScreenState extends State<EditorScreen> {
                 ),
                 child: CustomPaint(
                   painter:
-                      TemplatePreview(frame: template.toFrame()),
+                      TemplatePreview(frame: frame),
                 ),
               ),
             ),
@@ -783,9 +750,19 @@ class _EditorScreenState extends State<EditorScreen> {
                   children: [
                     AspectRatio(
                       aspectRatio: 1,
-                      child: CustomPaint(
-                        painter: TemplatePreview(
-                            frame: template.toFrame()),
+                      child: Stack(
+                        children: [
+                          CustomPaint(
+                            painter: TemplatePreview(
+                                frame: frame),
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: _sizeBadge(
+                                '${frame.width}×${frame.height}'),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -812,6 +789,7 @@ class _EditorScreenState extends State<EditorScreen> {
       itemCount: SpriteParts.all.length,
       itemBuilder: (context, i) {
         final part = SpriteParts.all[i];
+        final frame = part.toFrame();
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: InkWell(
@@ -844,9 +822,19 @@ class _EditorScreenState extends State<EditorScreen> {
                 children: [
                   AspectRatio(
                     aspectRatio: 1,
-                    child: CustomPaint(
-                      painter:
-                          TemplatePreview(frame: part.toFrame()),
+                    child: Stack(
+                      children: [
+                        CustomPaint(
+                          painter:
+                              TemplatePreview(frame: frame),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: _sizeBadge(
+                              '${frame.width}×${frame.height}'),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -872,6 +860,7 @@ class _EditorScreenState extends State<EditorScreen> {
       itemCount: AnimationLibrary.all.length,
       itemBuilder: (context, i) {
         final anim = AnimationLibrary.all[i];
+        final first = anim.frames.first;
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: InkWell(
@@ -901,7 +890,13 @@ class _EditorScreenState extends State<EditorScreen> {
                       children: [
                         CustomPaint(
                           painter: TemplatePreview(
-                              frame: anim.frames.first),
+                              frame: first),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: _sizeBadge(
+                              '${first.width}×${first.height}'),
                         ),
                         Positioned(
                           right: 2,
