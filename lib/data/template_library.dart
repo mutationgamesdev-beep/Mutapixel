@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/sprite_frame.dart';
+import 'templates_detailed.dart';
 import 'templates_extra.dart';
 import 'templates_faces.dart';
 import 'templates_food.dart';
@@ -530,6 +531,7 @@ class TemplateLibrary {
     ...SpaceTemplates.all,
     ...FacesTemplates.all,
     ...ExtraTemplates.all,
+    ...DetailedTemplates.all,
   ];
 
   static List<ArtTemplate> byCategory(String c) =>
@@ -544,6 +546,7 @@ class TemplateLibrary {
     'nature',
     'space',
     'faces',
+    'detailed',
   ];
 
   /// Human-friendly label for a category id.
@@ -565,6 +568,8 @@ class TemplateLibrary {
         return 'Space';
       case 'faces':
         return 'Faces';
+      case 'detailed':
+        return 'Detailed 32×32';
       default:
         return category;
     }
