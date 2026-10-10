@@ -20,20 +20,22 @@ void main() {
     expect(find.byTooltip('Layers'), findsOneWidget);
     expect(find.byTooltip('Download'), findsOneWidget);
 
-    // Tools (left rail), including the Move tool.
+    // Tools (left rail), including the Move and Select tools.
     expect(find.byTooltip('Pencil'), findsOneWidget);
     expect(find.byTooltip('Eraser'), findsOneWidget);
     expect(find.byTooltip('Fill'), findsOneWidget);
     expect(find.byTooltip('Eyedropper'), findsOneWidget);
     expect(find.byTooltip('Move'), findsOneWidget);
+    expect(find.byTooltip('Select'), findsOneWidget);
     expect(find.byTooltip('Undo'), findsOneWidget);
 
-    // Templates panel header.
+    // Library panel header with tabs.
+    expect(find.text('Library'), findsOneWidget);
     expect(find.text('Templates'), findsOneWidget);
+    expect(find.text('Anims'), findsOneWidget);
 
     // Palette bar chips.
     expect(find.text('Color'), findsOneWidget);
-    expect(find.text('Parts'), findsOneWidget);
     expect(find.text('Effects'), findsOneWidget);
   });
 
