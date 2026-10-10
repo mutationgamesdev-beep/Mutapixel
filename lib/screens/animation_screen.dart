@@ -14,8 +14,15 @@ import 'export_sheet.dart';
 /// Tapping a frame opens it in the pixel art editor (canvas size
 /// locked so every frame stays consistent); saving there returns
 /// the updated frame here.
+///
+/// Pass [initialFrames] (e.g. from an animation template) to start
+/// with those frames instead of a blank timeline; [initialFps] sets
+/// the suggested playback speed.
 class AnimationScreen extends StatefulWidget {
-  const AnimationScreen({super.key});
+  final List<SpriteFrame>? initialFrames;
+  final int? initialFps;
+
+  const AnimationScreen({super.key, this.initialFrames, this.initialFps});
 
   @override
   State<AnimationScreen> createState() => _AnimationScreenState();
@@ -24,7 +31,7 @@ class AnimationScreen extends StatefulWidget {
 class _AnimationScreenState extends State<AnimationScreen> {
   static const int _canvasSize = 32;
 
-  final List<SpriteFrame> _frames = [
+  late final List<SpriteFrame> _frames = [
     SpriteFrame(width: _canvasSize, height: _canvasSize),
   ];
   int _selected = 0;
@@ -34,6 +41,22 @@ class _AnimationScreenState extends State<AnimationScreen> {
   double _fps = 6;
   bool _onionSkin = false;
   Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialFrames;
+    if (initial != null && initial.isNotEmpty) {
+      _frames
+        ..clear()
+        ..addAll(
+          initial.map((f) => f.resized(_canvasSize, _canvasSize)),
+        );
+    }
+    if (widget.initialFps != null) {
+      _fps = widget.initialFps!.toDouble();
+    }
+  }
 
   @override
   void dispose() {
