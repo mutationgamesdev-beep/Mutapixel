@@ -51,24 +51,26 @@ void main() {
   });
 
   group('TemplateLibrary', () {
-    test('has 141 templates across 8 categories', () {
-      expect(TemplateLibrary.all.length, 141);
-      expect(TemplateLibrary.categories.length, 8);
+    test('has 171 templates across 9 categories', () {
+      expect(TemplateLibrary.all.length, 171);
+      expect(TemplateLibrary.categories.length, 9);
       for (final c in TemplateLibrary.categories) {
         expect(TemplateLibrary.byCategory(c), isNotEmpty,
             reason: 'category "$c" should not be empty');
       }
     });
 
-    test('all templates are valid 16x16 with mapped colors', () {
+    test('all templates are valid 16x16 or 32x32 with mapped colors', () {
       final names = <String>{};
       for (final template in TemplateLibrary.all) {
         expect(template.name, isNotEmpty);
         expect(names.add(template.name), isTrue,
             reason: 'duplicate template name "${template.name}"');
-        expect(template.rows.length, 16);
+        final size = template.rows.length;
+        expect(size == 16 || size == 32, isTrue,
+            reason: '${template.name} should be 16x16 or 32x32');
         for (final row in template.rows) {
-          expect(row.length, 16);
+          expect(row.length, size);
           for (var i = 0; i < row.length; i++) {
             final ch = row[i];
             expect(
@@ -81,6 +83,15 @@ void main() {
         final frame = template.toFrame();
         expect(frame.isEmpty, isFalse,
             reason: '${template.name} should not be blank');
+      }
+    });
+
+    test('detailed category has 30 native 32x32 templates', () {
+      final detailed = TemplateLibrary.byCategory('detailed');
+      expect(detailed.length, 30);
+      for (final t in detailed) {
+        expect(t.rows.length, 32);
+        expect(t.toFrame().width, 32);
       }
     });
   });
