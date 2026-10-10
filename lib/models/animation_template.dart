@@ -28,16 +28,27 @@ List<SpriteFrame> buildAnimFrames(
   Map<String, int> colors,
   List<List<String>> frameRows,
 ) {
+  return buildAnimFramesSized(colors, frameRows, 16);
+}
+
+/// Size-aware variant of [buildAnimFrames] for detailed (32x32)
+/// and ultra (64x64) animation templates.
+List<SpriteFrame> buildAnimFramesSized(
+  Map<String, int> colors,
+  List<List<String>> frameRows,
+  int size,
+) {
   return [
-    for (final rows in frameRows) _buildFrame(colors, rows),
+    for (final rows in frameRows) _buildFrameSized(colors, rows, size),
   ];
 }
 
-SpriteFrame _buildFrame(Map<String, int> colors, List<String> rows) {
-  final frame = SpriteFrame(width: 16, height: 16);
-  for (var y = 0; y < 16 && y < rows.length; y++) {
+SpriteFrame _buildFrameSized(
+    Map<String, int> colors, List<String> rows, int size) {
+  final frame = SpriteFrame(width: size, height: size);
+  for (var y = 0; y < size && y < rows.length; y++) {
     final row = rows[y];
-    for (var x = 0; x < 16 && x < row.length; x++) {
+    for (var x = 0; x < size && x < row.length; x++) {
       final ch = row[x];
       if (ch == '.') continue;
       final argb = colors[ch];
