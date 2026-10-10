@@ -32,7 +32,7 @@ void main() {
     // Library panel header with tabs.
     expect(find.text('Library'), findsOneWidget);
     expect(find.text('Templates'), findsOneWidget);
-    expect(find.text('Anims'), findsOneWidget);
+    expect(find.text('Animations'), findsOneWidget);
 
     // Palette bar chips.
     expect(find.text('Color'), findsOneWidget);
