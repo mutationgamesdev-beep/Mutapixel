@@ -31,6 +31,17 @@ class _HomeScreenState extends State<HomeScreen> {
   String _animQuery = '';
   int? _artSize;
   int? _animSize;
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _animSearchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    _animSearchController.dispose();
+    super.dispose();
+  }
 
   List<ArtTemplate> get _visible {
     Iterable<ArtTemplate> list;
@@ -140,7 +151,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final palette = MutapixelTheme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mutapixel'),
+        title: GestureDetector(
+          onTap: _goHome,
+          child: const Text('Mutapixel'),
+        ),
         actions: [
           ValueListenableBuilder<ThemeMode>(
             valueListenable: ThemeController.mode,
@@ -155,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -232,6 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 28),
             // Search.
             TextField(
+              controller: _searchController,
               onChanged: (v) =>
                   setState(() => _query = v),
               style:
@@ -318,6 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 12),
             TextField(
+              controller: _animSearchController,
               onChanged: (v) =>
                   setState(() => _animQuery = v),
               style:
@@ -451,7 +468,30 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Tapping the "Mutapixel" logo goes home: scrolls to the top
+  /// and clears any active filters or searches.
+  void _goHome() {
+    _searchController.clear();
+    _animSearchController.clear();
+    setState(() {
+      _category = 'all';
+      _query = '';
+      _animCategory = 'all';
+      _animQuery = '';
+      _artSize = null;
+      _animSize = null;
+    });
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   void _selectCategory(String value) {
+    _searchController.clear();
     setState(() {
       _category = value;
       _query = '';
@@ -459,6 +499,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _selectAnimCategory(String value) {
+    _animSearchController.clear();
     setState(() {
       _animCategory = value;
       _animQuery = '';
