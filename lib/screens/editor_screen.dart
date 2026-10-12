@@ -707,6 +707,27 @@ class _EditorScreenState extends State<EditorScreen> {
     );
   }
 
+  /// Small green pill marking game-ready animation templates,
+  /// placed bottom-left on thumbnails.
+  Widget _gameReadyBadge() {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2E9E5B).withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Text(
+        'GAME-READY',
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
   /// Templates tab content (art templates, as before).
   Widget _buildPanelTemplates(MutapixelPalette palette) {
     return ListView.builder(
@@ -871,6 +892,7 @@ class _EditorScreenState extends State<EditorScreen> {
                   builder: (_) => AnimationScreen(
                     initialFrames: anim.frames,
                     initialFps: anim.fps,
+                    initialFrameDurations: anim.frameDurations,
                   ),
                 ),
               );
@@ -898,6 +920,12 @@ class _EditorScreenState extends State<EditorScreen> {
                           child: _sizeBadge(
                               '${first.width}×${first.height}'),
                         ),
+                        if (anim.category == 'gameready')
+                          Positioned(
+                            left: 2,
+                            bottom: 2,
+                            child: _gameReadyBadge(),
+                          ),
                         Positioned(
                           right: 2,
                           bottom: 2,
