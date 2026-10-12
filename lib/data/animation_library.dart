@@ -6,6 +6,7 @@ import 'anim_effects_b.dart';
 import 'anim_effects_c.dart';
 import 'anim_effects_d.dart';
 import 'anim_emotes.dart';
+import 'anim_gameready.dart';
 import 'anim_idles_a.dart';
 import 'anim_idles_b.dart';
 import 'anim_idles_c.dart';
@@ -43,6 +44,7 @@ class AnimationLibrary {
     ...miscAnimations,
     ...detailedAnimTemplates,
     ...ultraAnimTemplates,
+    ...gamereadyHeroTemplates,
   ];
 
   static const List<String> categories = [
@@ -56,6 +58,7 @@ class AnimationLibrary {
     'misc',
     'detailed',
     'ultra',
+    'gameready',
   ];
 
   static String categoryLabel(String category) {
@@ -80,6 +83,8 @@ class AnimationLibrary {
         return 'Detailed 32×32';
       case 'ultra':
         return 'Ultra 64×64';
+      case 'gameready':
+        return 'Game-Ready';
       default:
         return category;
     }
