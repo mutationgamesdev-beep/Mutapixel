@@ -6,18 +6,28 @@ import 'sprite_frame.dart';
 ///
 /// Frames are 16x16; [AnimationScreen] scales them to its canvas size
 /// when loading.
+///
+/// [frameDurations] is an optional per-frame display time in
+/// milliseconds (game-ready animations use this instead of a flat
+/// [fps] rate). When set, its length must match [frames].
 class AnimationTemplate {
   final String name;
-  final String category; // walks, runs, jumps, idles, attacks, effects, emotes, misc
+  final String category; // walks, runs, jumps, idles, attacks, effects, emotes, misc, gameready
   final List<SpriteFrame> frames; // 2-4 frames each
   final int fps; // suggested playback speed
+  final List<int>? frameDurations; // per-frame milliseconds; null = flat fps
 
   const AnimationTemplate({
     required this.name,
     required this.category,
     required this.frames,
     required this.fps,
-  });
+    this.frameDurations,
+  }) : assert(
+          frameDurations == null ||
+              frameDurations.length == frames.length,
+          'frameDurations must match frames in length',
+        );
 }
 
 /// Builds [SpriteFrame]s from text rows, mirroring [ArtTemplate].
