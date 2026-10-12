@@ -93,6 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (_) => AnimationScreen(
           initialFrames: template.frames,
           initialFps: template.fps,
+          initialFrameDurations: template.frameDurations,
         ),
       ),
     );
@@ -494,6 +495,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Small green pill marking game-ready animation templates,
+  /// placed bottom-left on thumbnails.
+  Widget _gameReadyBadge() {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2E9E5B).withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Text(
+        'GAME-READY',
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
   Widget _templateGrid() {
     final templates = _visible;
     final palette = MutapixelTheme.of(context);
@@ -632,6 +654,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               '${first.width}×${first.height}',
                               palette),
                         ),
+                        if (t.category == 'gameready')
+                          Positioned(
+                            left: 0,
+                            bottom: 0,
+                            child: _gameReadyBadge(),
+                          ),
                         Positioned(
                           right: 0,
                           bottom: 0,
