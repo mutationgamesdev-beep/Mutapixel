@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/sprite_frame.dart';
+import '../services/save_service.dart';
+import '../services/sprite_exporter.dart';
 import '../theme/mutapixel_theme.dart';
 import '../widgets/template_preview.dart';
 import 'editor_screen.dart';
@@ -17,12 +19,19 @@ import 'export_sheet.dart';
 ///
 /// Pass [initialFrames] (e.g. from an animation template) to start
 /// with those frames instead of a blank timeline; [initialFps] sets
-/// the suggested playback speed.
+/// the suggested playback speed. [initialFrameDurations] carries
+/// per-frame display times in milliseconds for game-ready
+/// animations; when set, playback uses them instead of [initialFps].
 class AnimationScreen extends StatefulWidget {
   final List<SpriteFrame>? initialFrames;
   final int? initialFps;
+  final List<int>? initialFrameDurations;
 
-  const AnimationScreen({super.key, this.initialFrames, this.initialFps});
+  const AnimationScreen(
+      {super.key,
+      this.initialFrames,
+      this.initialFps,
+      this.initialFrameDurations});
 
   @override
   State<AnimationScreen> createState() => _AnimationScreenState();
@@ -42,6 +51,9 @@ class _AnimationScreenState extends State<AnimationScreen> {
   bool _onionSkin = false;
   Timer? _timer;
 
+  /// Per-frame durations in ms; null means flat-fps playback.
+  List<int>? _frameDurations;
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +67,10 @@ class _AnimationScreenState extends State<AnimationScreen> {
     }
     if (widget.initialFps != null) {
       _fps = widget.initialFps!.toDouble();
+    }
+    final durations = widget.initialFrameDurations;
+    if (durations != null && durations.length == _frames.length) {
+      _frameDurations = List.of(durations);
     }
   }
 
@@ -70,13 +86,24 @@ class _AnimationScreenState extends State<AnimationScreen> {
       _playing = true;
       _playIndex = 0;
     });
-    _timer = Timer.periodic(
-      Duration(milliseconds: (1000 / _fps).round()),
-      (_) {
-        if (!mounted) return;
-        setState(() => _playIndex = (_playIndex + 1) % _frames.length);
-      },
-    );
+    _scheduleNextFrame();
+  }
+
+  /// Advances one frame, then schedules the next advance.
+  ///
+  /// With per-frame durations each frame shows for its own time;
+  /// otherwise the flat [_fps] rate applies to every frame.
+  void _scheduleNextFrame() {
+    _timer?.cancel();
+    final durations = _frameDurations;
+    final ms = durations != null && _playIndex < durations.length
+        ? durations[_playIndex]
+        : (1000 / _fps).round();
+    _timer = Timer(Duration(milliseconds: ms), () {
+      if (!mounted || !_playing) return;
+      setState(() => _playIndex = (_playIndex + 1) % _frames.length);
+      _scheduleNextFrame();
+    });
   }
 
   void _stopPlayback() {
@@ -159,6 +186,32 @@ class _AnimationScreenState extends State<AnimationScreen> {
     );
   }
 
+  /// Game-ready export: ZIP with a horizontal sprite-sheet PNG at
+  /// native frame size plus sheet.json (frame rects, durations,
+  /// engine import notes). Downloads via SaveService.
+  Future<void> _exportSpriteSheetZip() async {
+    try {
+      final zip = SpriteExporter.encodeSpriteSheetZip(
+        _frames,
+        name: 'animation',
+        frameDurations: _frameDurations,
+        fps: _fps.round(),
+      );
+      final name =
+          'mutapixel_spritesheet_${DateTime.now().millisecondsSinceEpoch}.zip';
+      await SaveService.saveToFiles(zip, name);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sprite sheet ZIP saved!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sprite sheet export failed: $e')),
+      );
+    }
+  }
+
   Widget _buildPreview() {
     final palette = MutapixelTheme.of(context);
     final frame = _playing ? _frames[_playIndex] : _frames[_selected];
@@ -218,6 +271,21 @@ class _AnimationScreenState extends State<AnimationScreen> {
             ],
           ),
           const SizedBox(height: 4),
+          if (_frameDurations != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Chip(
+                label: const Text('Per-frame timing',
+                    style: TextStyle(fontSize: 11)),
+                avatar: const Icon(Icons.timer_outlined, size: 14),
+                visualDensity: VisualDensity.compact,
+                onDeleted: () =>
+                    setState(() => _frameDurations = null),
+                deleteIcon: const Icon(Icons.close, size: 14),
+                deleteButtonTooltipMessage:
+                    'Switch to flat FPS speed',
+              ),
+            ),
           Row(
             children: [
               Text('Speed',
@@ -232,7 +300,11 @@ class _AnimationScreenState extends State<AnimationScreen> {
                   divisions: 11,
                   label: '${_fps.round()} fps',
                   onChanged: (v) {
-                    setState(() => _fps = v);
+                    setState(() {
+                      _fps = v;
+                      // Flat-fps mode takes over from per-frame timing.
+                      _frameDurations = null;
+                    });
                     if (_playing) _startPlayback();
                   },
                 ),
@@ -245,6 +317,30 @@ class _AnimationScreenState extends State<AnimationScreen> {
                         fontSize: 12,
                         color: palette.secondaryText)),
               ),
+            ],
+          ),
+          // One-tap game-standard speeds.
+          Row(
+            children: [
+              const SizedBox(width: 46),
+              for (final preset in [6, 8, 10, 12])
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ChoiceChip(
+                    label: Text('$preset',
+                        style: const TextStyle(fontSize: 11)),
+                    selected: _fps.round() == preset &&
+                        _frameDurations == null,
+                    visualDensity: VisualDensity.compact,
+                    onSelected: (_) {
+                      setState(() {
+                        _fps = preset.toDouble();
+                        _frameDurations = null;
+                      });
+                      if (_playing) _startPlayback();
+                    },
+                  ),
+                ),
             ],
           ),
         ],
@@ -419,7 +515,16 @@ class _AnimationScreenState extends State<AnimationScreen> {
               _buildTimeline(),
               Padding(
                 padding:
-                    const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                    const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: FilledButton.tonalIcon(
+                  icon: const Icon(Icons.grid_on),
+                  label: const Text('Export sprite sheet'),
+                  onPressed: _exportSpriteSheetZip,
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.fromLTRB(16, 0, 16, 24),
                 child: FilledButton.icon(
                   icon: const Icon(Icons.edit),
                   label: Text(
