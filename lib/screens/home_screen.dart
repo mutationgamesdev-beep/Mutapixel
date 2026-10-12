@@ -29,27 +29,41 @@ class _HomeScreenState extends State<HomeScreen> {
   String _query = '';
   String _animCategory = 'all';
   String _animQuery = '';
+  int? _artSize;
+  int? _animSize;
 
   List<ArtTemplate> get _visible {
+    Iterable<ArtTemplate> list;
     final q = _query.trim().toLowerCase();
     if (q.isNotEmpty) {
-      return TemplateLibrary.all
-          .where((t) => t.name.toLowerCase().contains(q))
-          .toList();
+      list = TemplateLibrary.all
+          .where((t) => t.name.toLowerCase().contains(q));
+    } else if (_category == 'all') {
+      list = TemplateLibrary.all;
+    } else {
+      list = TemplateLibrary.byCategory(_category);
     }
-    if (_category == 'all') return TemplateLibrary.all;
-    return TemplateLibrary.byCategory(_category);
+    if (_artSize != null) {
+      list = list.where((t) => t.rows.length == _artSize);
+    }
+    return list.toList();
   }
 
   List<AnimationTemplate> get _visibleAnims {
+    Iterable<AnimationTemplate> list;
     final q = _animQuery.trim().toLowerCase();
     if (q.isNotEmpty) {
-      return AnimationLibrary.all
-          .where((t) => t.name.toLowerCase().contains(q))
-          .toList();
+      list = AnimationLibrary.all
+          .where((t) => t.name.toLowerCase().contains(q));
+    } else if (_animCategory == 'all') {
+      list = AnimationLibrary.all;
+    } else {
+      list = AnimationLibrary.byCategory(_animCategory);
     }
-    if (_animCategory == 'all') return AnimationLibrary.all;
-    return AnimationLibrary.byCategory(_animCategory);
+    if (_animSize != null) {
+      list = list.where((t) => t.frames.first.width == _animSize);
+    }
+    return list.toList();
   }
 
   void _openEditorBlank(int size) {
@@ -262,6 +276,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
+                  _sizeChip(null, _artSize == null,
+                      () => setState(() => _artSize = null)),
+                  for (final s in const [16, 32, 64])
+                    _sizeChip(s, _artSize == s,
+                        () => setState(() => _artSize = s)),
+                  _chipDivider(palette),
                   _categoryChip('all', 'All',
                       _category == 'all' && _query.isEmpty,
                       () => _selectCategory('all')),
@@ -331,6 +351,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
+                  _sizeChip(null, _animSize == null,
+                      () => setState(() => _animSize = null)),
+                  for (final s in const [16, 32, 64])
+                    _sizeChip(s, _animSize == s,
+                        () => setState(() => _animSize = s)),
+                  _chipDivider(palette),
                   _categoryChip('all', 'All',
                       _animCategory == 'all' && _animQuery.isEmpty,
                       () => _selectAnimCategory('all')),
@@ -349,6 +375,79 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// A folder-style size filter chip (16x16, 32x32, 64x64).
+  /// Sits at the start of the category row so templates can be
+  /// browsed by pixel size, like folders.
+  Widget _sizeChip(
+      int? size, bool selected, VoidCallback onTap) {
+    final palette = MutapixelTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(right: 8, top: 4, bottom: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: selected
+                  ? const Color(0xFF2E9E5B)
+                  : palette.subtleFill,
+              borderRadius: BorderRadius.circular(999),
+              border: selected
+                  ? null
+                  : Border.all(color: palette.hairline),
+              boxShadow: selected
+                  ? MutapixelTheme.pillShadow
+                  : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  size == null
+                      ? Icons.folder_open_outlined
+                      : Icons.folder_outlined,
+                  size: 14,
+                  color: selected
+                      ? Colors.white
+                      : palette.secondaryText,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  size == null ? 'All sizes' : '$size×$size',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: selected
+                        ? FontWeight.w600
+                        : FontWeight.w500,
+                    color: selected
+                        ? Colors.white
+                        : palette.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Thin vertical divider separating the size-folder chips
+  /// from the category chips in the same row.
+  Widget _chipDivider(MutapixelPalette palette) {
+    return Container(
+      width: 1,
+      height: 24,
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+      color: palette.hairline,
     );
   }
 
@@ -537,7 +636,7 @@ class _HomeScreenState extends State<HomeScreen> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate:
           const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+        crossAxisCount: 4,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
         childAspectRatio: 0.85,
@@ -546,6 +645,10 @@ class _HomeScreenState extends State<HomeScreen> {
       itemBuilder: (context, i) {
         final t = templates[i];
         final frame = t.toFrame();
+        // Hide the size badge when a size folder is active —
+        // every card is that size, so the badge adds nothing.
+        final showSizeBadge =
+            _artSize == null && _query.trim().isEmpty;
         return GestureDetector(
           onTap: () => _openEditorTemplate(t),
           child: Container(
@@ -567,8 +670,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         Positioned(
                           top: 0,
                           right: 0,
-                          child: _sizeBadge(
-                              '${frame.width}×${frame.height}', palette),
+                          child: showSizeBadge
+                              ? _sizeBadge(
+                                  '${frame.width}×${frame.height}',
+                                  palette)
+                              : const SizedBox.shrink(),
                         ),
                       ],
                     ),
@@ -620,7 +726,7 @@ class _HomeScreenState extends State<HomeScreen> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate:
           const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+        crossAxisCount: 4,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
         childAspectRatio: 0.85,
@@ -629,6 +735,8 @@ class _HomeScreenState extends State<HomeScreen> {
       itemBuilder: (context, i) {
         final t = templates[i];
         final first = t.frames.first;
+        final showSizeBadge =
+            _animSize == null && _animQuery.trim().isEmpty;
         return GestureDetector(
           onTap: () => _openAnimationTemplate(t),
           child: Container(
@@ -650,9 +758,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         Positioned(
                           top: 0,
                           right: 0,
-                          child: _sizeBadge(
-                              '${first.width}×${first.height}',
-                              palette),
+                          child: showSizeBadge
+                              ? _sizeBadge(
+                                  '${first.width}×${first.height}',
+                                  palette)
+                              : const SizedBox.shrink(),
                         ),
                         if (t.category == 'gameready')
                           Positioned(
