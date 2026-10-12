@@ -1229,11 +1229,30 @@ class _EditorScreenState extends State<EditorScreen> {
       child: Scaffold(
         backgroundColor: palette.background,
         appBar: AppBar(
-          leading: IconButton(
-            tooltip: 'Back',
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context)
-                .pop(ArtLayer.flatten(_layers)),
+          // "Mutapixel" home button at the top-left, like a website
+          // logo: tapping it leaves the creation page and goes home.
+          // Behaves exactly like the old back arrow (returns the
+          // flattened artwork as the pop result).
+          leadingWidth: 140,
+          leading: Tooltip(
+            message: 'Home',
+            child: TextButton.icon(
+              onPressed: () => Navigator.of(context)
+                  .pop(ArtLayer.flatten(_layers)),
+              icon: const Icon(Icons.arrow_back_ios_new, size: 16),
+              label: Text(
+                'Mutapixel',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: palette.ink,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: palette.ink,
+                padding: const EdgeInsets.only(left: 8),
+              ),
+            ),
           ),
           title: Text(
               '${_layers[_activeLayer].name} · ${_canvasSize}x$_canvasSize'),

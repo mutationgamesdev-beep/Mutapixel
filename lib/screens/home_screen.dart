@@ -31,13 +31,11 @@ class _HomeScreenState extends State<HomeScreen> {
   String _animQuery = '';
   int? _artSize;
   int? _animSize;
-  final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _animSearchController = TextEditingController();
 
   @override
   void dispose() {
-    _scrollController.dispose();
     _searchController.dispose();
     _animSearchController.dispose();
     super.dispose();
@@ -169,7 +167,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        controller: _scrollController,
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -468,26 +465,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Tapping the "Mutapixel" logo goes home: scrolls to the top
-  /// and clears any active filters or searches.
+  /// Tapping the "Mutapixel" logo goes to the home page
+  /// (the landing screen this app screen was opened from).
   void _goHome() {
-    _searchController.clear();
-    _animSearchController.clear();
-    setState(() {
-      _category = 'all';
-      _query = '';
-      _animCategory = 'all';
-      _animQuery = '';
-      _artSize = null;
-      _animSize = null;
-    });
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeOut,
-      );
-    }
+    Navigator.of(context).pop();
   }
 
   void _selectCategory(String value) {

@@ -492,10 +492,27 @@ class _AnimationScreenState extends State<AnimationScreen> {
     return Scaffold(
       backgroundColor: palette.background,
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Home',
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+        // "Mutapixel" home button at the top-left, like a website
+        // logo: tapping it leaves the studio and goes home.
+        leadingWidth: 140,
+        leading: Tooltip(
+          message: 'Home',
+          child: TextButton.icon(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 16),
+            label: Text(
+              'Mutapixel',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: palette.ink,
+              ),
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: palette.ink,
+              padding: const EdgeInsets.only(left: 8),
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
         title: const Text('Animation Studio'),
         actions: [
