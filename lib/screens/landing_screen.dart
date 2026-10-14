@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../data/animation_library.dart';
+import '../data/character_kits.dart';
 import '../data/template_library.dart';
 import '../theme/mutapixel_theme.dart';
 import '../theme/theme_controller.dart';
 import '../widgets/template_preview.dart';
 import 'home_screen.dart';
+import 'kit_screen.dart';
 
 /// The website's home page.
 ///
@@ -106,6 +108,7 @@ class _LandingScreenState extends State<LandingScreen> {
             _features(palette),
             _gallery(palette),
             _gameReadyBand(palette),
+            _characterKitsSection(palette),
             _finalCta(palette),
             _footer(palette),
           ],
@@ -570,6 +573,145 @@ class _LandingScreenState extends State<LandingScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// Character Kits: complete move sets, one download each.
+  Widget _characterKitsSection(MutapixelPalette palette) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 40, 0, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: MutapixelTheme.primary
+                        .withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'NEW',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: MutapixelTheme.primary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Character Kits',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
+                    color: palette.ink,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'A whole character, not one walk cycle. Every kit ships the full move set — idle, walk, run, jump, attack and more — as game-ready sprite sheets.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: palette.secondaryText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 260,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24),
+              itemCount: characterKits.length,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(width: 12),
+              itemBuilder: (context, i) {
+                final kit = characterKits[i];
+                return GestureDetector(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => KitScreen(kit: kit)),
+                  ),
+                  child: Container(
+                    width: 200,
+                    decoration: BoxDecoration(
+                      color: palette.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      border:
+                          Border.all(color: palette.hairline),
+                    ),
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: palette.background,
+                              borderRadius:
+                                  BorderRadius.circular(12),
+                            ),
+                            padding:
+                                const EdgeInsets.all(8),
+                            child: CustomPaint(
+                              painter: TemplatePreview(
+                                  frame: kit.coverFrame),
+                              child:
+                                  const SizedBox.expand(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          kit.name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: palette.ink,
+                          ),
+                        ),
+                        Text(
+                          kit.tagline,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            color: palette.secondaryText,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${kit.actions.length} actions · ${kit.totalFrames} frames',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: MutapixelTheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
