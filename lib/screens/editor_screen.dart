@@ -3,11 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../models/art_layer.dart';
+import '../models/canvas_preset.dart';
 import '../models/sprite_frame.dart';
 import '../data/sprite_parts.dart';
 import '../data/template_library.dart';
 import '../data/animation_library.dart';
 import '../theme/mutapixel_theme.dart';
+import '../widgets/canvas_size_picker.dart';
 import '../widgets/photoshop_color_picker.dart';
 import '../widgets/pixel_canvas.dart';
 import '../widgets/template_preview.dart';
@@ -318,12 +320,39 @@ class _EditorScreenState extends State<EditorScreen> {
                   style:
                       TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
               const SizedBox(height: 12),
-              ...[16, 32, 64].map(
-                (size) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: OutlinedButton(
-                    onPressed: () => _newBlank(size),
-                    child: Text('$size x $size'),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.stretch,
+                    children: [
+                      for (final preset in canvasPresets)
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(bottom: 8),
+                          child: OutlinedButton(
+                            onPressed: () =>
+                                _newBlank(preset.size),
+                            child: Text(
+                                '${preset.name} · ${preset.label}'),
+                          ),
+                        ),
+                      OutlinedButton(
+                        onPressed: () async {
+                          Navigator.of(context).pop();
+                          final size =
+                              await showCanvasSizePicker(
+                                  context);
+                          if (size != null &&
+                              context.mounted) {
+                            _resetLayers(SpriteFrame(
+                                width: size, height: size));
+                          }
+                        },
+                        child:
+                            const Text('Custom size…'),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -1286,13 +1315,14 @@ class _EditorScreenState extends State<EditorScreen> {
                 tooltip: 'Canvas size',
                 icon: const Icon(Icons.aspect_ratio),
                 onSelected: _resizeCanvas,
-                itemBuilder: (context) => [16, 32, 64]
-                    .map((s) => PopupMenuItem(
-                          value: s,
-                          child: Text('$s x $s'
-                              '${s == _canvasSize ? ' ✓' : ''}'),
-                        ))
-                    .toList(),
+                itemBuilder: (context) => [
+                  for (final preset in canvasPresets)
+                    PopupMenuItem(
+                      value: preset.size,
+                      child: Text('${preset.name} · ${preset.label}'
+                          '${preset.size == _canvasSize ? ' ✓' : ''}'),
+                    ),
+                ],
               ),
             IconButton(
               tooltip: 'New',
