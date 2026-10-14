@@ -776,6 +776,7 @@ class _EditorScreenState extends State<EditorScreen> {
                           CustomPaint(
                             painter: TemplatePreview(
                                 frame: frame),
+                            child: const SizedBox.expand(),
                           ),
                           Positioned(
                             top: 0,
@@ -848,6 +849,7 @@ class _EditorScreenState extends State<EditorScreen> {
                         CustomPaint(
                           painter:
                               TemplatePreview(frame: frame),
+                          child: const SizedBox.expand(),
                         ),
                         Positioned(
                           top: 0,
@@ -913,6 +915,7 @@ class _EditorScreenState extends State<EditorScreen> {
                         CustomPaint(
                           painter: TemplatePreview(
                               frame: first),
+                          child: const SizedBox.expand(),
                         ),
                         Positioned(
                           top: 0,
