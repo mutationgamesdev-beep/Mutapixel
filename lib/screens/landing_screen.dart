@@ -8,6 +8,8 @@ import '../theme/theme_controller.dart';
 import '../widgets/template_preview.dart';
 import 'home_screen.dart';
 import 'kit_screen.dart';
+import 'ai_lab_screen.dart';
+import '../data/ai_lab.dart';
 
 /// The website's home page.
 ///
@@ -109,6 +111,7 @@ class _LandingScreenState extends State<LandingScreen> {
             _gallery(palette),
             _gameReadyBand(palette),
             _characterKitsSection(palette),
+            _aiLabSection(palette),
             _finalCta(palette),
             _footer(palette),
           ],
@@ -702,6 +705,142 @@ class _LandingScreenState extends State<LandingScreen> {
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: MutapixelTheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// AI Lab: themed drops of AI-forged pixel art.
+  Widget _aiLabSection(MutapixelPalette palette) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 40, 0, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: MutapixelTheme.primary
+                        .withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'NEW',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: MutapixelTheme.primary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'AI Lab',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
+                    color: palette.ink,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Forged by AI, finished by you. Themed drops of AI-generated pixel art — open any piece in the editor to remix it, or download the PNG straight into your game.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    color: palette.secondaryText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 220,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24),
+              itemCount: aiPacks.length,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(width: 12),
+              itemBuilder: (context, i) {
+                final pack = aiPacks[i];
+                return GestureDetector(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            AiLabScreen()),
+                  ),
+                  child: Container(
+                    width: 300,
+                    decoration: BoxDecoration(
+                      color: palette.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      border:
+                          Border.all(color: palette.hairline),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Image.asset(
+                            pack.artworks.first.assetPath,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, _, __) =>
+                                Container(
+                              color: palette.hairline,
+                              child: const Center(
+                                child: Icon(
+                                    Icons.image_not_supported),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                pack.title,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: palette.ink,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                pack.tagline,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      palette.secondaryText,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
