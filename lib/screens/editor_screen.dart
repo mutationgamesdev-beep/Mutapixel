@@ -577,9 +577,13 @@ class _EditorScreenState extends State<EditorScreen> {
 
   Widget _buildTemplatesPanel() {
     final palette = MutapixelTheme.of(context);
+    // Wider on desktop so the library shows a real grid; narrower
+    // on small screens so the canvas keeps room to breathe.
+    final panelWidth =
+        MediaQuery.sizeOf(context).width < 700 ? 220.0 : 320.0;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      width: _panelCollapsed ? 0 : 132,
+      width: _panelCollapsed ? 0 : panelWidth,
       child: _panelCollapsed
           ? const SizedBox.shrink()
           : Container(
@@ -626,19 +630,23 @@ class _EditorScreenState extends State<EditorScreen> {
                       ],
                     ),
                   ),
-                  // Tabs: Templates | Parts | Animations (vertical).
+                  // Tabs: Templates | Parts | Animations (horizontal).
                   Padding(
                     padding:
                         const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.stretch,
+                    child: Row(
                       children: [
-                        _panelTabButton(0, 'Templates', palette),
-                        const SizedBox(height: 6),
-                        _panelTabButton(1, 'Parts', palette),
-                        const SizedBox(height: 6),
-                        _panelTabButton(2, 'Animations', palette),
+                        Expanded(
+                            child: _panelTabButton(
+                                0, 'Templates', palette)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                            child: _panelTabButton(
+                                1, 'Parts', palette)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                            child: _panelTabButton(
+                                2, 'Animations', palette)),
                       ],
                     ),
                   ),
@@ -728,17 +736,39 @@ class _EditorScreenState extends State<EditorScreen> {
     );
   }
 
+  /// Grid shared by the library panel tabs: as many columns as fit
+  /// (~76px per cell), at least 2, so desktop shows 4+ per row.
+  Widget _panelGrid({
+    required int itemCount,
+    required Widget Function(BuildContext, int) itemBuilder,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final count =
+            (constraints.maxWidth / 76).floor().clamp(2, 6);
+        return GridView.builder(
+          padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: count,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 0.75,
+          ),
+          itemCount: itemCount,
+          itemBuilder: itemBuilder,
+        );
+      },
+    );
+  }
+
   /// Templates tab content (art templates, as before).
   Widget _buildPanelTemplates(MutapixelPalette palette) {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+    return _panelGrid(
       itemCount: TemplateLibrary.all.length,
       itemBuilder: (context, i) {
         final template = TemplateLibrary.all[i];
         final frame = template.toFrame();
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: LongPressDraggable<ArtTemplate>(
+        return LongPressDraggable<ArtTemplate>(
             data: template,
             feedback: Material(
               elevation: 6,
@@ -798,7 +828,6 @@ class _EditorScreenState extends State<EditorScreen> {
                 ),
               ),
             ),
-          ),
         );
       },
     );
@@ -806,15 +835,12 @@ class _EditorScreenState extends State<EditorScreen> {
 
   /// Parts tab content: tap a part to enter stamp mode.
   Widget _buildPanelParts(MutapixelPalette palette) {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+    return _panelGrid(
       itemCount: SpriteParts.all.length,
       itemBuilder: (context, i) {
         final part = SpriteParts.all[i];
         final frame = part.toFrame();
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: InkWell(
+        return InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
               setState(() {
@@ -870,7 +896,6 @@ class _EditorScreenState extends State<EditorScreen> {
                 ],
               ),
             ),
-          ),
         );
       },
     );
@@ -878,15 +903,12 @@ class _EditorScreenState extends State<EditorScreen> {
 
   /// Animations tab content: tap to open in Animation Studio.
   Widget _buildPanelAnimations(MutapixelPalette palette) {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+    return _panelGrid(
       itemCount: AnimationLibrary.all.length,
       itemBuilder: (context, i) {
         final anim = AnimationLibrary.all[i];
         final first = anim.frames.first;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: InkWell(
+        return InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () {
               Navigator.of(context).push(
@@ -964,7 +986,6 @@ class _EditorScreenState extends State<EditorScreen> {
                 ],
               ),
             ),
-          ),
         );
       },
     );
