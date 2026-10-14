@@ -72,7 +72,9 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/ai_lab/
+    # NOTE: Flutter asset directory entries are NOT recursive — each
+    # pack subdirectory must be declared individually.
+    - assets/ai_lab/pack01/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
