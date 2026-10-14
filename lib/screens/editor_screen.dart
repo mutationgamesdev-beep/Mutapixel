@@ -580,7 +580,7 @@ class _EditorScreenState extends State<EditorScreen> {
     // Wider on desktop so the library shows a real grid; narrower
     // on small screens so the canvas keeps room to breathe.
     final panelWidth =
-        MediaQuery.sizeOf(context).width < 700 ? 220.0 : 320.0;
+        MediaQuery.sizeOf(context).width < 700 ? 200.0 : 240.0;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       width: _panelCollapsed ? 0 : panelWidth,
@@ -737,7 +737,7 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   /// Grid shared by the library panel tabs: as many columns as fit
-  /// (~76px per cell), at least 2, so desktop shows 4+ per row.
+  /// (~52px per cell), at least 2, so desktop shows 4 per row.
   Widget _panelGrid({
     required int itemCount,
     required Widget Function(BuildContext, int) itemBuilder,
@@ -745,14 +745,14 @@ class _EditorScreenState extends State<EditorScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final count =
-            (constraints.maxWidth / 76).floor().clamp(2, 6);
+            (constraints.maxWidth / 56).floor().clamp(2, 6);
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: count,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,
-            childAspectRatio: 0.75,
+            childAspectRatio: 0.72,
           ),
           itemCount: itemCount,
           itemBuilder: itemBuilder,
@@ -822,7 +822,7 @@ class _EditorScreenState extends State<EditorScreen> {
                       template.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 10),
+                      style: const TextStyle(fontSize: 9),
                     ),
                   ],
                 ),
@@ -891,7 +891,7 @@ class _EditorScreenState extends State<EditorScreen> {
                     part.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 10),
+                    style: const TextStyle(fontSize: 9),
                   ),
                 ],
               ),
@@ -981,7 +981,7 @@ class _EditorScreenState extends State<EditorScreen> {
                     anim.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 10),
+                    style: const TextStyle(fontSize: 9),
                   ),
                 ],
               ),
