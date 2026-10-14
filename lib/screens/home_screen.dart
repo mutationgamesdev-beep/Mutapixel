@@ -6,6 +6,7 @@ import '../models/animation_template.dart';
 import '../models/sprite_frame.dart';
 import '../theme/mutapixel_theme.dart';
 import '../theme/theme_controller.dart';
+import '../widgets/canvas_size_picker.dart';
 import '../widgets/template_preview.dart';
 import 'animation_screen.dart';
 import 'editor_screen.dart';
@@ -23,8 +24,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const _canvasSizes = [16, 32, 64, 128];
-
   String _category = 'all';
   String _query = '';
   String _animCategory = 'all';
@@ -123,24 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _showSizePicker() async {
-    final size = await showDialog<int>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Canvas size'),
-        children: [
-          for (final s in _canvasSizes)
-            SimpleDialogOption(
-              onPressed: () => Navigator.of(context).pop(s),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8),
-                child: Text('$s x $s pixels',
-                    style: const TextStyle(fontSize: 15)),
-              ),
-            ),
-        ],
-      ),
-    );
+    final size = await showCanvasSizePicker(context);
     if (size != null && mounted) _openEditorBlank(size);
   }
 
