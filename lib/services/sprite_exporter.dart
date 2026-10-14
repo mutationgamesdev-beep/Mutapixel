@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:image/image.dart' as img;
 
 import '../models/art_layer.dart';
+import '../models/character_kit.dart';
 import '../models/sprite_frame.dart';
 
 /// Turns sprite frames into PNG bytes.
@@ -214,6 +215,125 @@ class SpriteExporter {
     final complete = encodeFrame(ArtLayer.flatten(layers), scale: scale);
     archive.addFile(
         ArchiveFile('complete.png', complete.length, complete));
+    return Uint8List.fromList(ZipEncoder().encode(archive));
+  }
+
+  /// Packs a whole character kit into one ZIP: for every action a
+  /// horizontal sprite-strip PNG (`<action>_sheet.png`, native size,
+  /// 2px transparent gutter) plus its engine manifest
+  /// (`<action>_sheet.json`), and a top-level `kit.json` describing
+  /// the kit and every action in it.
+  static Uint8List encodeKitZip(CharacterKit kit) {
+    assert(kit.actions.isNotEmpty, 'kit needs at least one action');
+    final archive = Archive();
+    final frameW = kit.actions.first.frames.first.width;
+    final frameH = kit.actions.first.frames.first.height;
+
+    final actionEntries = <Map<String, Object>>[];
+    for (final action in kit.actions) {
+      final safeAction = ArtLayer.sanitizeName(CharacterKit.shortActionName(
+        kit.name,
+        action.name,
+      )).toLowerCase();
+      const gutter = 2;
+      final frames = action.frames;
+      final w = frames.first.width;
+      final h = frames.first.height;
+
+      // Horizontal strip, native size.
+      final outW = frames.length * w + (frames.length + 1) * gutter;
+      final outH = h + gutter * 2;
+      final sheet = img.Image(width: outW, height: outH, numChannels: 4);
+      for (var i = 0; i < frames.length; i++) {
+        final frame = frames[i];
+        final ox = gutter + i * (w + gutter);
+        for (var y = 0; y < frame.height; y++) {
+          for (var x = 0; x < frame.width; x++) {
+            final color = frame.getPixel(x, y);
+            sheet.setPixel(
+              ox + x,
+              gutter + y,
+              color == null
+                  ? img.ColorRgba8(0, 0, 0, 0)
+                  : img.ColorRgba8(
+                      (color.r * 255).round(),
+                      (color.g * 255).round(),
+                      (color.b * 255).round(),
+                      (color.a * 255).round(),
+                    ),
+            );
+          }
+        }
+      }
+      final png = Uint8List.fromList(img.encodePng(sheet));
+      archive.addFile(
+          ArchiveFile('${safeAction}_sheet.png', png.length, png));
+
+      final defaultMs = (1000 / action.fps).round();
+      final actionJson = {
+        'meta': {
+          'app': 'Mutapixel',
+          'kit': kit.id,
+          'name': action.name,
+          'frameSize': {'w': w, 'h': h},
+          'frameCount': frames.length,
+        },
+        'frames': [
+          for (var i = 0; i < frames.length; i++)
+            {
+              'index': i,
+              'x': gutter + i * (w + gutter),
+              'y': gutter,
+              'w': w,
+              'h': h,
+              'durationMs':
+                  action.frameDurations?[i] ?? defaultMs,
+            },
+        ],
+        'engines': {
+          'unity':
+              'Import PNG as Sprite (Multiple), slice ${w}x$h grid; apply per-frame durations to the clip.',
+          'godot':
+              'Use as AnimatedSprite2D SpriteFrames; set each frame duration from JSON.',
+          'unreal':
+              'Import as Paper2D flipbook; match frame order and durations.',
+        },
+      };
+      final actionBytes =
+          Uint8List.fromList(utf8.encode(jsonEncode(actionJson)));
+      archive.addFile(ArchiveFile('${safeAction}_sheet.json',
+          actionBytes.length, actionBytes));
+
+      actionEntries.add({
+        'name': action.name,
+        'shortName': CharacterKit.shortActionName(kit.name, action.name),
+        'file': '${safeAction}_sheet.png',
+        'manifest': '${safeAction}_sheet.json',
+        'frameCount': frames.length,
+        'fps': action.fps,
+      });
+    }
+
+    final kitJson = {
+      'meta': {
+        'app': 'Mutapixel',
+        'kind': 'character-kit',
+        'id': kit.id,
+        'name': kit.name,
+        'tagline': kit.tagline,
+        'description': kit.description,
+        'frameSize': {'w': frameW, 'h': frameH},
+        'actionCount': kit.actions.length,
+        'totalFrames': kit.totalFrames,
+      },
+      'actions': actionEntries,
+      'credit': 'Original artwork by Mutation Games Development.',
+    };
+    final kitBytes =
+        Uint8List.fromList(utf8.encode(jsonEncode(kitJson)));
+    archive.addFile(
+        ArchiveFile('kit.json', kitBytes.length, kitBytes));
+
     return Uint8List.fromList(ZipEncoder().encode(archive));
   }
 }
