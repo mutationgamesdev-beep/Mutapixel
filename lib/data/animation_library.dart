@@ -7,6 +7,7 @@ import 'anim_effects_c.dart';
 import 'anim_effects_d.dart';
 import 'anim_emotes.dart';
 import 'anim_gameready.dart';
+import 'anim_knight.dart';
 import 'anim_idles_a.dart';
 import 'anim_idles_b.dart';
 import 'anim_idles_c.dart';
@@ -45,6 +46,7 @@ class AnimationLibrary {
     ...detailedAnimTemplates,
     ...ultraAnimTemplates,
     ...gamereadyHeroTemplates,
+    ...knightKitTemplates,
   ];
 
   static const List<String> categories = [
