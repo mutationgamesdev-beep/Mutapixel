@@ -48,6 +48,8 @@ dependencies:
   # Persist the user's light/dark theme choice
   shared_preferences: ^2.3.0
   archive: ^4.3.0
+  # HTTP calls to the AI image generation API
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:

@@ -6,12 +6,41 @@ import '../models/ai_pack.dart';
 import '../services/save_service.dart';
 import '../theme/mutapixel_theme.dart';
 import '../utils/image_decode.dart';
+import 'ai_chat_screen.dart';
 import 'editor_screen.dart';
 
-/// The AI Lab: themed drops of AI-forged pixel art.
-/// Browse packs, open any piece in the editor, or download the PNG.
+/// The AI Lab: an AI chat that forges pixel art and animations,
+/// plus themed drops of curated AI pixel art.
 class AiLabScreen extends StatelessWidget {
   const AiLabScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('AI Lab'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Chat'),
+              Tab(text: 'Packs'),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            AiChatScreen(showAppBar: false),
+            _PacksTab(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PacksTab extends StatelessWidget {
+  const _PacksTab();
 
   @override
   Widget build(BuildContext context) {
