@@ -239,8 +239,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
     } catch (_) {
       _add(const _ChatMsg(
         kind: _MsgKind.aiError,
-        text: 'Something went wrong talking to the AI. '
-            'Check your connection and try again.',
+        text: 'Couldn\'t reach the AI. If you just added your key, '
+            'double-check it — otherwise check your connection '
+            'and try again.',
       ));
     } finally {
       _setBusy(null);

@@ -12,8 +12,23 @@ import 'editor_screen.dart';
 
 /// The AI Lab: an AI chat that forges pixel art and animations,
 /// plus themed drops of curated AI pixel art.
-class AiLabScreen extends StatelessWidget {
+class AiLabScreen extends StatefulWidget {
   const AiLabScreen({super.key});
+
+  @override
+  State<AiLabScreen> createState() => _AiLabScreenState();
+}
+
+class _AiLabScreenState extends State<AiLabScreen> {
+  int _chatRevision = 0;
+
+  Future<void> _openKeySettings() async {
+    await showAiKeySheet(context);
+    // The key may have changed: remount the chat so it reloads it.
+    if (mounted) {
+      setState(() => _chatRevision++);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +41,7 @@ class AiLabScreen extends StatelessWidget {
             IconButton(
               tooltip: 'AI API key',
               icon: const Icon(Icons.key_outlined),
-              onPressed: () =>
-                  showAiKeySheet(context),
+              onPressed: _openKeySettings,
             ),
           ],
           bottom: const TabBar(
@@ -37,10 +51,13 @@ class AiLabScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
-            AiChatScreen(showAppBar: false),
-            _PacksTab(),
+            AiChatScreen(
+              key: ValueKey(_chatRevision),
+              showAppBar: false,
+            ),
+            const _PacksTab(),
           ],
         ),
       ),

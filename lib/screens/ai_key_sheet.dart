@@ -25,6 +25,7 @@ class _AiKeySheetState extends State<_AiKeySheet> {
   final _controller = TextEditingController();
   bool _hasKey = false;
   bool _obscured = true;
+  String? _keyError;
 
   @override
   void initState() {
@@ -48,6 +49,13 @@ class _AiKeySheetState extends State<_AiKeySheet> {
   Future<void> _save() async {
     final key = _controller.text.trim();
     if (key.isEmpty) return;
+    if (!key.startsWith('sk-') || key.length < 20) {
+      setState(() => _keyError =
+          'That doesn\'t look like an API key — it should start '
+          'with "sk-".');
+      return;
+    }
+    setState(() => _keyError = null);
     await AiSettings.saveKey(key);
     if (!mounted) return;
     Navigator.of(context).pop();
@@ -132,6 +140,7 @@ class _AiKeySheetState extends State<_AiKeySheet> {
               autocorrect: false,
               decoration: InputDecoration(
                 labelText: 'API key (starts with sk-)',
+                errorText: _keyError,
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(_obscured
