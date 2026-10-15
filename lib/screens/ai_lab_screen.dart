@@ -7,6 +7,7 @@ import '../services/save_service.dart';
 import '../theme/mutapixel_theme.dart';
 import '../utils/image_decode.dart';
 import 'ai_chat_screen.dart';
+import 'ai_key_sheet.dart';
 import 'editor_screen.dart';
 
 /// The AI Lab: an AI chat that forges pixel art and animations,
@@ -21,6 +22,14 @@ class AiLabScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('AI Lab'),
+          actions: [
+            IconButton(
+              tooltip: 'AI API key',
+              icon: const Icon(Icons.key_outlined),
+              onPressed: () =>
+                  showAiKeySheet(context),
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Chat'),
