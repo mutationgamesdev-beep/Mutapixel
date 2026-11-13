@@ -267,7 +267,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 12),
             SizedBox(
-              height: 44,
+              height: 48,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
@@ -343,7 +343,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 12),
             SizedBox(
-              height: 44,
+              height: 48,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
@@ -390,7 +390,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.symmetric(
-                horizontal: 14, vertical: 8),
+                horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: selected
                   ? const Color(0xFF2E9E5B)
@@ -546,7 +546,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 8),
+                horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               color: selected
                   ? MutapixelTheme.primary
@@ -619,6 +619,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Column count for the template grids: roomy 2-up cards on
+  /// phones instead of four cramped columns, scaling back up to
+  /// the original 4-up layout on desktop widths.
+  int _gridColumns(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    if (w < 600) return 2;
+    if (w < 1000) return 3;
+    return 4;
+  }
+
   Widget _templateGrid() {
     final templates = _visible;
     final palette = MutapixelTheme.of(context);
@@ -639,8 +649,8 @@ class _HomeScreenState extends State<HomeScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
+          SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _gridColumns(context),
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
         childAspectRatio: 0.85,
@@ -729,8 +739,8 @@ class _HomeScreenState extends State<HomeScreen> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
+          SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _gridColumns(context),
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
         childAspectRatio: 0.85,

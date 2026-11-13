@@ -117,6 +117,14 @@ class _EditorScreenState extends State<EditorScreen> {
   @override
   void initState() {
     super.initState();
+    // On phone-width screens the library panel starts closed:
+    // side by side it would crush the canvas. On phones it opens
+    // as an overlay from the floating templates button instead.
+    final view =
+        WidgetsBinding.instance.platformDispatcher.views.first;
+    if (view.physicalSize.width / view.devicePixelRatio < 600) {
+      _panelCollapsed = true;
+    }
     _canvasSize = widget.initialCanvasSize;
     if (widget.initialFrame != null) {
       _layers = [
@@ -1134,6 +1142,9 @@ class _EditorScreenState extends State<EditorScreen> {
 
   Widget _buildPaletteBar() {
     final palette = MutapixelTheme.of(context);
+    // Bigger colour swatches on phones: easier to hit with a thumb.
+    final swatch =
+        MediaQuery.sizeOf(context).width < 600 ? 40.0 : 34.0;
     final all = [..._defaultPalette, ..._customColors];
     return Container(
       margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
@@ -1155,7 +1166,7 @@ class _EditorScreenState extends State<EditorScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            height: 34,
+            height: swatch,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: all.length,
@@ -1182,8 +1193,8 @@ class _EditorScreenState extends State<EditorScreen> {
                     }
                   },
                   child: Container(
-                    width: 34,
-                    height: 34,
+                    width: swatch,
+                    height: swatch,
                     decoration: BoxDecoration(
                       color: color == Colors.transparent
                           ? palette.subtleFill
@@ -1277,6 +1288,7 @@ class _EditorScreenState extends State<EditorScreen> {
   @override
   Widget build(BuildContext context) {
     final palette = MutapixelTheme.of(context);
+    final isPhone = MediaQuery.sizeOf(context).width < 600;
     return PopScope(
       canPop: true,
       child: Scaffold(
@@ -1385,11 +1397,13 @@ class _EditorScreenState extends State<EditorScreen> {
                   ),
                 ),
               Expanded(
-                child: Row(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.stretch,
+                child: Stack(
                   children: [
-                    _buildSideRail(),
+                    Row(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.stretch,
+                      children: [
+                        _buildSideRail(),
                     Expanded(
                       child: DragTarget<ArtTemplate>(
                         onWillAcceptWithDetails: (_) => true,
@@ -1483,7 +1497,29 @@ class _EditorScreenState extends State<EditorScreen> {
                         },
                       ),
                     ),
-                    _buildTemplatesPanel(),
+                        if (!isPhone) _buildTemplatesPanel(),
+                      ],
+                    ),
+                    // On phones the library floats over the canvas
+                    // behind a scrim instead of squeezing it.
+                    if (isPhone && !_panelCollapsed) ...[
+                      Positioned.fill(
+                        child: GestureDetector(
+                          onTap: () => setState(
+                              () => _panelCollapsed = true),
+                          child: Container(
+                            color: Colors.black
+                                .withValues(alpha: 0.3),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: _buildTemplatesPanel(),
+                      ),
+                    ],
                   ],
                 ),
               ),

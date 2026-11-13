@@ -302,6 +302,13 @@ class _LandingScreenState extends State<LandingScreen> {
 
   /// Feature cards.
   Widget _features(MutapixelPalette palette) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final phone = screenWidth < 600;
+    // Phones get one full-width card per row: two cramped columns
+    // made the descriptions stack up. The ratio derives from the
+    // available width so each card stays ~168px tall.
+    final featureRatio =
+        ((screenWidth - 48) / 168).clamp(1.5, 2.6).toDouble();
     final features = [
       (
         Icons.brush_outlined,
@@ -343,11 +350,11 @@ class _LandingScreenState extends State<LandingScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
+                SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: phone ? 1 : 2,
+              mainAxisSpacing: phone ? 14 : 12,
               crossAxisSpacing: 12,
-              childAspectRatio: 0.92,
+              childAspectRatio: phone ? featureRatio : 0.92,
             ),
             itemCount: features.length,
             itemBuilder: (context, i) {
@@ -419,13 +426,17 @@ class _LandingScreenState extends State<LandingScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Fresh from the library',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
-                    color: palette.ink,
+                Expanded(
+                  child: Text(
+                    'Fresh from the library',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                      color: palette.ink,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 TextButton(

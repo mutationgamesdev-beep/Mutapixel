@@ -80,8 +80,9 @@ class _PartsSheetState extends State<PartsSheet> {
             child: GridView.builder(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
+                  SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount:
+                    MediaQuery.sizeOf(context).width < 600 ? 3 : 4,
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
                 childAspectRatio: 0.8,
